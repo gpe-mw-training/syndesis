@@ -709,9 +709,16 @@ objects:
     strategy:
       resources:
         limits:
-          memory: "256Mi"
+
+          # JA Bride:  Bumping up memory limit and adding CPU limits
+          
+          # Utilized when determining -XmX
+          memory: "3Gi"
+          cpu: "1"
         requests:
-          memory: "20Mi"
+          cpu: "1"
+          memory: "2Gi"
+
       type: Recreate
     template:
       metadata:
@@ -732,6 +739,13 @@ objects:
             value: "true"
           - name: JAVA_OPTIONS
             value: "-Djava.net.preferIPv4Stack=true -Duser.home=/tmp"
+
+          # JA Bride:  Adjusting JVM variables
+          - name: JAVA_MAX_MEM_RATIO
+            value: "80"
+          - name: JAVA_INITIAL_MEM_RATIO
+            value: "0"
+
           - name: NAMESPACE
             valueFrom:
               fieldRef:
