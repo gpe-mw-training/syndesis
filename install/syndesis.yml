@@ -733,6 +733,7 @@ objects:
           - name: JAVA_OPTIONS
             value: "-Djava.net.preferIPv4Stack=true -Duser.home=/tmp"
 
+  
           # JA Bride:  Adjusting JVM variables
           - name: JAVA_MAX_MEM_RATIO
             value: "80"
@@ -778,14 +779,17 @@ objects:
           # Set QoS class to "Guaranteed" (limits == requests)
           # This doesn't work on OSO as there is a fixed ratio
           # from limit to resource (80% currently). 'requests' is ignored there
+          resources:
 
-          # JA Bride:  Bumping up memory limit and adding CPU limits
-          # Utilized when determining -XmX
-          memory: "3Gi"
-          cpu: "1"
-        requests:
-          cpu: "1"
-          memory: "2Gi"
+            # JA Bride:  Bumping up memory limit and adding CPU limits
+
+            # Utilized when determining -XmX
+            limits:
+              memory: "3Gi"
+              cpu: "1"
+            requests:
+              cpu: "1"
+              memory: "2Gi"
 
         volumes:
         - name: config-volume
