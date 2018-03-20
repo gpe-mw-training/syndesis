@@ -101,6 +101,13 @@ objects:
       spec:
         containers:
         - env:
+
+           # JA Bride:  Adjusting JVM variables
+          - name: JAVA_MAX_MEM_RATIO
+            value: "80"
+          - name: JAVA_INITIAL_MEM_RATIO
+            value: "0"
+
           - name: AMQ_USER
             value: ${MQ_USERNAME}
           - name: AMQ_PASSWORD
@@ -127,6 +134,19 @@ objects:
               - /bin/bash
               - -c
               - /opt/amq/bin/readinessProbe.sh
+
+          resources:
+
+            # JA Bride:  Bumping up memory limit and adding CPU limits
+
+            # Utilized when determining -XmX
+            limits:
+              memory: "2Gi"
+              cpu: "2"
+            requests:
+              cpu: "2"
+              memory: "2Gi"
+
         terminationGracePeriodSeconds: 60
     triggers:
     - imageChangeParams:
