@@ -709,16 +709,9 @@ objects:
     strategy:
       resources:
         limits:
-
-          # JA Bride:  Bumping up memory limit and adding CPU limits
-          
-          # Utilized when determining -XmX
-          memory: "3Gi"
-          cpu: "1"
+          memory: "256Mi"
         requests:
-          cpu: "1"
-          memory: "2Gi"
-
+          memory: "20Mi"
       type: Recreate
     template:
       metadata:
@@ -785,11 +778,15 @@ objects:
           # Set QoS class to "Guaranteed" (limits == requests)
           # This doesn't work on OSO as there is a fixed ratio
           # from limit to resource (80% currently). 'requests' is ignored there
-          resources:
-            limits:
-              memory: 612Mi
-            requests:
-              memory: 256Mi
+
+          # JA Bride:  Bumping up memory limit and adding CPU limits
+          # Utilized when determining -XmX
+          memory: "3Gi"
+          cpu: "1"
+        requests:
+          cpu: "1"
+          memory: "2Gi"
+
         volumes:
         - name: config-volume
           configMap:
