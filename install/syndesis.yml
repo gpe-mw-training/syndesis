@@ -889,6 +889,13 @@ objects:
             value: "true"
           - name: JAVA_OPTIONS
             value: "-Djava.net.preferIPv4Stack=true -Duser.home=/tmp"
+
+          # JA Bride:  Adjusting JVM variables
+          - name: JAVA_MAX_MEM_RATIO
+            value: "80"
+          - name: JAVA_INITIAL_MEM_RATIO
+            value: "0"
+
           - name: NAMESPACE
             valueFrom:
               fieldRef:
