@@ -27,11 +27,11 @@ parameters:
 # JA Bride
 - name: MAX_INTEGRATIONS_PER_USER
   description: MAX_INTEGRATIONS_PER_USER
-  value: 5
+  value: "5"
   required: true
 - name: MAX_DEPLOYMENT_PER_USER
   description: MAX_DEPLOYMENTS_PER_USER
-  value: 5
+  value: "5"
   required: true
 
 - name: OPENSHIFT_MASTER
