@@ -23,6 +23,17 @@ parameters:
   description: The external hostname to access Syndesis
   required: true
 # Parameters with defaults:
+
+# JA Bride
+- name: MAX_INTEGRATIONS_PER_USER
+  description: MAX_INTEGRATIONS_PER_USER
+  value: 5
+  required: true
+- name: MAX_DEPLOYMENT_PER_USER
+  description: MAX_DEPLOYMENTS_PER_USER
+  value: 5
+  required: true
+
 - name: OPENSHIFT_MASTER
   description: Public OpenShift master address
   value: https://localhost:8443
@@ -1002,6 +1013,13 @@ objects:
     application.yml: |-
       deployment:
         load-demo-data: ${DEMO_DATA_ENABLED}
+
+      # JA Bride
+      # https://github.com/redhat-gpe/fuse_ipaas/issues/50
+      controllers:
+        maxIntegrationsPerUser: ${MAX_INTEGRATIONS_PER_USER}
+        maxDeploymentsPerUser: ${MAX_DEPLOYMENTS_PER_USER}
+
       cors:
         allowedOrigins: https://${ROUTE_HOSTNAME}
 
