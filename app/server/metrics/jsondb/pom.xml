@@ -63,6 +63,18 @@
     </dependency>
 
     <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>error_prone_annotations</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.jboss.spec.javax.annotation</groupId>
       <artifactId>jboss-annotations-api_1.2_spec</artifactId>
     </dependency>
@@ -137,6 +149,13 @@
         <artifactId>lombok</artifactId>
         <scope>provided</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.jdbi</groupId>
+      <artifactId>jdbi</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
     <!-- === Testing Dependencies ======================================================== -->
 
     <dependency>
@@ -154,12 +173,6 @@
     <dependency>
       <groupId>org.glassfish</groupId>
       <artifactId>javax.el</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jdbi</groupId>
-      <artifactId>jdbi</artifactId>
       <scope>test</scope>
     </dependency>
 

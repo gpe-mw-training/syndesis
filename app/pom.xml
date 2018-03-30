@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.basepom</groupId>
     <artifactId>basepom-oss</artifactId>
-    <version>23</version>
+    <version>25</version>
   </parent>
 
   <groupId>io.syndesis</groupId>
@@ -37,7 +37,7 @@
     <syndesis.version>${project.version}</syndesis.version>
 
     <!-- Atlasmap version -->
-    <atlasmap.version>1.33.6</atlasmap.version>
+    <atlasmap.version>1.34.0</atlasmap.version>
     <camel-atlasmap.version>${atlasmap.version}</camel-atlasmap.version>
 
     <!-- Image names -->
@@ -68,11 +68,13 @@
     <activemq.version>5.15.2</activemq.version>
 
     <!-- Global camel version used everywhere -->
-    <camel.version>2.20.1</camel.version>
+    <camel.version>2.21.0</camel.version>
 
     <dep.plugin.dependency.version>3.0.2</dep.plugin.dependency.version>
     <dep.plugin.pmd.version>3.8</dep.plugin.pmd.version>
     <dep.pmd.version>5.8.1</dep.pmd.version>
+    <dep.plugin.surefire.version>2.21.0</dep.plugin.surefire.version> <!-- SUREFIRE-1422 -->
+    <dep.plugin.failsafe.version>2.21.0</dep.plugin.failsafe.version> <!-- SUREFIRE-1422 -->
 
     <!-- Don't fork based on cores, doesn't work nicely in the cloud -->
     <basepom.test.fork-count>1</basepom.test.fork-count>
@@ -107,6 +109,9 @@
     <resteasy-spring-boot-starter.version>2.3.4-RELEASE</resteasy-spring-boot-starter.version>
 
     <immutables.version>2.5.6</immutables.version>
+
+    <jdbi.version>2.78</jdbi.version>
+    <postgresql.version>9.1-901-1.jdbc4</postgresql.version>
   </properties>
 
   <modules>
@@ -722,6 +727,12 @@
 
       <dependency>
         <groupId>io.syndesis.server</groupId>
+        <artifactId>server-update-controller</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.syndesis.server</groupId>
         <artifactId>server-logging-jsondb</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -1076,6 +1087,12 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>2.5</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>2.6</version>
       </dependency>
 
       <dependency>

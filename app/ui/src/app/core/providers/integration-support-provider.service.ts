@@ -16,7 +16,6 @@ import { Action,
   PUBLISHED
 } from '@syndesis/ui/platform';
 import { EventsService } from '@syndesis/ui/store';
-import { RequestMethod, ResponseContentType } from '@angular/http';
 
 @Injectable()
 export class IntegrationSupportProviderService extends IntegrationSupportService {
@@ -100,7 +99,10 @@ export class IntegrationSupportProviderService extends IntegrationSupportService
   }
 
   getDeployments(id: string): Observable<IntegrationDeployments> {
-    return this.apiHttpService.setEndpointUrl(integrationEndpoints.deployments, { id }).get();
+    return this.apiHttpService
+      .setEndpointUrl(integrationEndpoints.deployments, { id })
+      .get()
+      .map(response => (response['items'] as IntegrationDeployments) || []);
   }
 
   watchDeployments(id: string): Observable<any> {
@@ -135,8 +137,9 @@ export class IntegrationSupportProviderService extends IntegrationSupportService
   }
 
   exportIntegration(...ids: string[]): Observable<Blob> {
-    const url = integrationEndpoints.export + '?' + ids.map(id => 'id=' + id).join('&');
-    return this.apiHttpService.get<Blob>(url, { responseType: 'blob' });
+    return this.apiHttpService
+      .setEndpointUrl(integrationEndpoints.export, { id: ids })
+      .get( { responseType: 'blob' });
   }
 
   importIntegrationURL(): string {

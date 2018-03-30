@@ -28,44 +28,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.syndesis.common.model.buletin;
+package io.syndesis.common.model.bulletin;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.immutables.value.Value;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import io.syndesis.common.model.Kind;
 import io.syndesis.common.model.WithId;
+import io.syndesis.common.model.WithMetadata;
 import io.syndesis.common.model.WithModificationTimestamps;
 
-/**
- * A ConnectionBulletinBoard holds any notifications that should be displayed to the user
- * for a given connection.
- */
-@Value.Immutable
-@JsonDeserialize(builder = ConnectionBulletinBoard.Builder.class)
-@SuppressWarnings("immutables")
-public interface ConnectionBulletinBoard extends WithId<ConnectionBulletinBoard>, WithModificationTimestamps {
-
-    @Override
-    default Kind getKind() {
-        return Kind.ConnectionBulletinBoard;
-    }
-
-    @Value.Default
-    default List<LeveledMessage> getMessages() {
-        return Collections.emptyList();
-    }
-
-    static ConnectionBulletinBoard of(String id, List<LeveledMessage> messages) {
-        return new ConnectionBulletinBoard.Builder().id(id).messages(messages).build();
-    }
-
-    class Builder extends ImmutableConnectionBulletinBoard.Builder {
-        // allow access to ImmutableIntegration.Builder
-    }
-
+public interface BulletinBoard<T extends WithId<T>> extends WithId<T>, WithMetadata, WithLeveledMessages, WithModificationTimestamps {
 }

@@ -3,16 +3,19 @@
 .integration-detail {
   &__body {
     display: flex;
-    flex: 2;
     flex-direction: column;
   }
+
   &__info {
-    flex-grow: 0;
-    padding: 0 0 $gutter $gutter;
+    margin-bottom: 10px;
+  }
+
+  &__row {
+    padding: 0 $gutter;
   }
 
   &__outlet {
-    flex: 2;
+    flex-grow: 1;;
     background: white;
     padding: $gutter;
   }

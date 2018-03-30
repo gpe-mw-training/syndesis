@@ -27,12 +27,11 @@
         </div>
       </div>
     </div>
-    <div class="integration-detail__body row">
-      <div class="integration-detail__info">
+    <div class="integration-detail__body row syn-scrollable--body">
+      <div class="integration-detail__info integration-detail__row">
         <h1 class="inline-block">
           <syndesis-editable-text [value]="integration.name" [validationFn]="validateName" (onSave)="nameUpdated($event)"></syndesis-editable-text>
         </h1>
-
         <ng-container [ngSwitch]="integration.currentState">	 
           <ng-container *ngSwitchCase="'Pending'">	  
             <div class="spinner spinner-sm spinner-inline"></div> {{ integration.targetState == 'Published' ? 'Publishing...' : 'Unpublishing...' }}
@@ -47,44 +46,30 @@
             <span class="pficon pficon-error"></span> Published version {{ integration.deploymentVersion }}
           </ng-container>
         </ng-container>
-
       </div>
 
-      <div *ngIf="integration.messages && integration.messages.length" class="col-md-12">
+      <div *ngIf="integration.messages && integration.messages.length" class="integration-detail__row">        
         <div *ngFor="let message of integration.messages">
-          <ng-container [ngSwitch]="message.level">
-            <div class="alert alert-danger" *ngSwitchCase="'ERROR'">
-              <span class="pficon pficon-error-circle-o"></span>
-              <p [innerHtml]="message.message"></p>
-            </div>
-            <div class="alert alert-warning" *ngSwitchCase="'WARN'">
-              <span class="pficon pficon-warning-triangle-o"></span>
-              <p [innerHtml]="message.message"></p>
-            </div>
-            <div class="alert alert-info" *ngSwitchDefault>
-              <span class="pficon pficon-info"></span>
-              <p [innerHtml]="message.message"></p>
-            </div>
-          </ng-container>
+          <syndesis-inline-alert [message]="message"></syndesis-inline-alert>
         </div>
       </div>
 
       <ul class="syn-tabs row nav nav-tabs nav-tabs-pf toolbar-pf integration-detail__tabs">
-        <li class="syn-tabs__tab" [class.active]="selectedTabType == 'description'">
-          <a (click)="toggleTab('description')">Details</a>
+        <li class="syn-tabs__tab" [class.active]="(selectedTabbedView$ | async) == 'description'">
+          <a [routerLink]="['/integrations', integration.id]">Details</a>
         </li>
-        <li class="syn-tabs__tab" [class.active]="selectedTabType == 'activity'">
-          <a (click)="toggleTab('activity')">Activity</a>
+        <li class="syn-tabs__tab" [class.active]="(selectedTabbedView$ | async) == 'activity'">
+          <a [routerLink]="['/integrations', integration.id]" [queryParams]="{ view: 'activity' }">Activity</a>
         </li>
-        <li class="syn-tabs__tab" [class.active]="selectedTabType == 'logs'" *ngIf="loggingEnabled">
-          <a (click)="toggleTab('logs')">Logs</a>
+        <li class="syn-tabs__tab" [class.active]="(selectedTabbedView$ | async) == 'logs'" *ngIf="loggingEnabled">
+          <a [routerLink]="['/integrations', integration.id]" [queryParams]="{ view: 'logs' }">Logs</a>
         </li>
-        <li class="syn-tabs__tab" [class.active]="selectedTabType == 'metrics'">
-          <a (click)="toggleTab('metrics')">Metrics</a>
+        <li class="syn-tabs__tab" [class.active]="(selectedTabbedView$ | async) == 'metrics'">
+          <a [routerLink]="['/integrations', integration.id]" [queryParams]="{ view: 'metrics' }">Metrics</a>
         </li>
       </ul>
 
-      <div class="integration-detail__outlet" [hidden]="selectedTabType !== 'description'">
+      <div class="integration-detail__outlet" [hidden]="(selectedTabbedView$ | async) !== 'description'">
         <syndesis-integration-description
           [integration]="integration"
           [stepStore]="stepStore"
@@ -100,15 +85,15 @@
         </syndesis-integration-history>
       </div>
 
-      <div class="integration-detail__outlet" [hidden]="selectedTabType !== 'logs'">
+      <div class="integration-detail__outlet" [hidden]="(selectedTabbedView$ | async) !== 'logs'">
         <syndesis-integration-logs [integration]=integration></syndesis-integration-logs>
       </div>
 
-      <div class="integration-detail__outlet" [hidden]="selectedTabType !== 'activity'">
+      <div class="integration-detail__outlet" [hidden]="(selectedTabbedView$ | async) !== 'activity'">
         <syndesis-integration-activity [integration]=integration></syndesis-integration-activity>
       </div>
 
-      <div class="integration-detail__outlet" [hidden]="selectedTabType !== 'metrics'">
+      <div class="integration-detail__outlet" [hidden]="(selectedTabbedView$ | async) !== 'metrics'">
         <syndesis-integration-metrics
           [integration]=integration
           [integrationMetrics]="integrationMetrics$ | async"

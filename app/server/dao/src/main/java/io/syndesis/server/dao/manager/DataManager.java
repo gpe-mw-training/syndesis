@@ -23,14 +23,18 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceException;
 
+import io.syndesis.common.model.WithIdVersioned;
 import io.syndesis.common.util.EventBus;
 import io.syndesis.common.util.Json;
 import io.syndesis.common.util.KeyGenerator;
@@ -42,6 +46,7 @@ import io.syndesis.common.model.Kind;
 import io.syndesis.common.model.ListResult;
 import io.syndesis.common.model.ModelData;
 import io.syndesis.common.model.WithId;
+import io.syndesis.common.model.connection.Connection;
 import io.syndesis.common.model.connection.Connector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +91,7 @@ public class DataManager implements DataAccessObjectRegistry {
         this.eventBus = eventBus;
         this.encryptionComponent = encryptionComponent;
         this.resourceLoader = resourceLoader;
+
         if (dataAccessObjects != null) {
             this.dataAccessObjects.addAll(dataAccessObjects);
         }
@@ -218,6 +224,12 @@ public class DataManager implements DataAccessObjectRegistry {
         }
     }
 
+    public <K extends WithId<K>> Stream<K> fetchAllByPropertyValue(Class<K> type, String property, String value) {
+        return fetchIdsByPropertyValue(type, property, value).stream()
+            .map(id -> fetch(type, id))
+            .filter(Objects::nonNull);
+    }
+
     public <T extends WithId<T>> T fetch(Class<T> model, String id) {
         Kind kind = Kind.from(model);
         Map<String, T> cache = caches.getCache(kind.getModelName());
@@ -230,6 +242,10 @@ public class DataManager implements DataAccessObjectRegistry {
             }
         }
         return value;
+    }
+
+    public <K extends WithId<K>> Optional<K> fetchByPropertyValue(Class<K> type, String property, String value) {
+        return fetchAllByPropertyValue(type, property, value).findFirst();
     }
 
     @SuppressWarnings("unchecked")
@@ -271,6 +287,7 @@ public class DataManager implements DataAccessObjectRegistry {
         return doWithDataAccessObject(model, d -> d.fetchIdsByPropertyValue(property, value));
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends WithId<T>> T create(final T entity) {
         Kind kind = entity.getKind();
         Map<String, T> cache = caches.getCache(kind.getModelName());
@@ -279,6 +296,7 @@ public class DataManager implements DataAccessObjectRegistry {
 
         final T entityToCreate;
         if (!id.isPresent()) {
+            validateNoDuplicateName(entity);
             idVal = KeyGenerator.createKey();
             entityToCreate = entity.withId(idVal);
         } else {
@@ -291,29 +309,46 @@ public class DataManager implements DataAccessObjectRegistry {
         }
 
         this.<T, T>doWithDataAccessObject(kind.getModelClass(), d -> d.create(entityToCreate));
+
         cache.put(idVal, entityToCreate);
-        broadcast("created", kind.getModelName(), idVal);
+        broadcast(EventBus.Action.CREATED, kind.getModelName(), idVal);
+
         return entityToCreate;
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends WithId<T>> void update(T entity) {
         Optional<String> id = entity.getId();
         if (!id.isPresent()) {
             throw new EntityNotFoundException("Setting the id on the entity is required for updates");
         }
 
-        String idVal = id.get();
+        validateNoDuplicateName(entity, id.get());
 
+        String idVal = id.get();
         Kind kind = entity.getKind();
-        T previous = this.<T, T>doWithDataAccessObject(kind.getModelClass(), d -> d.update(entity));
+
+        final T oldEntity = this.<T>fetch(kind.getModelClass(), idVal);
+        final T newEntity;
+
+        if (oldEntity != null && entity instanceof WithIdVersioned) {
+            WithIdVersioned<T> prev = WithIdVersioned.class.cast(oldEntity);
+            int revision = prev.getVersion();
+
+            newEntity = (T) WithIdVersioned.class.cast(entity).withVersion(revision + 1);
+        } else {
+            newEntity = entity;
+        }
+
+        T previous = this.<T, T>doWithDataAccessObject(kind.getModelClass(), d -> d.update(newEntity));
 
         Map<String, T> cache = caches.getCache(kind.getModelName());
-        if (!cache.containsKey(idVal) && previous==null) {
+        if (!cache.containsKey(idVal) && previous == null) {
             throw new EntityNotFoundException("Can not find " + kind + " with id " + idVal);
         }
 
-        cache.put(idVal, entity);
-        broadcast("updated", kind.getModelName(), idVal);
+        cache.put(idVal, newEntity);
+        broadcast(EventBus.Action.UPDATED, kind.getModelName(), idVal);
 
         //TODO 1. properly merge the data ? + add data validation in the REST Resource
     }
@@ -330,7 +365,7 @@ public class DataManager implements DataAccessObjectRegistry {
         this.<T, T>doWithDataAccessObject(kind.getModelClass(), d -> { d.set(entity); return null;});
         Map<String, T> cache = caches.getCache(kind.getModelName());
         cache.put(idVal, entity);
-        broadcast("updated", kind.getModelName(), idVal);
+        broadcast(EventBus.Action.UPDATED, kind.getModelName(), idVal);
     }
 
 
@@ -351,7 +386,7 @@ public class DataManager implements DataAccessObjectRegistry {
 
         // Return true if the entity was found in any of the two.
         if ( deletedInCache || deletedFromDAO ) {
-            broadcast("deleted", kind.getModelName(), id);
+            broadcast(EventBus.Action.DELETED, kind.getModelName(), id);
             return true;
         }
 
@@ -384,7 +419,7 @@ public class DataManager implements DataAccessObjectRegistry {
      * Perform a simple action if a {@link DataAccessObject} for the specified kind exists.
      * This is just a way to avoid, duplicating the dao lookup and checks, which are going to change.
      * @param model         The model class of the {@link DataAccessObject}.
-     * @param function      The function to perfom on the {@link DataAccessObject}.
+     * @param function      The function to perform on the {@link DataAccessObject}.
      * @param <R>           The return type.
      * @return              The outcome of the function.
      */
@@ -398,7 +433,7 @@ public class DataManager implements DataAccessObjectRegistry {
 
     private void broadcast(String event, String type, String id) {
         if( eventBus !=null ) {
-            eventBus.broadcast("change-event", ChangeEvent.of(event, type, id).toJson());
+            eventBus.broadcast(EventBus.Type.CHANGE_EVENT, ChangeEvent.of(event, type, id).toJson());
         }
     }
 
@@ -411,5 +446,31 @@ public class DataManager implements DataAccessObjectRegistry {
     @SuppressWarnings("unchecked")
     private static <T> Function<ListResult<T>, ListResult<T>>[] noOperators() {
         return (Function<ListResult<T>, ListResult<T>>[]) NO_OPERATORS;
+    }
+
+    private <T extends WithId<T>> void validateNoDuplicateName(final T entity) {
+        validateNoDuplicateName(entity, null);
+    }
+
+    private <T extends WithId<T>> void validateNoDuplicateName(final T entity, final String ignoreSelfId) {
+        if (entity instanceof Connection) {
+            Connection c = (Connection) entity;
+            if (c.getName() == null) {
+                LOGGER.error("Connection name is a required field");
+                throw new PersistenceException("'Name' is a required field");
+            }
+            Set<String> ids = fetchIdsByPropertyValue(Connection.class, "name", c.getName());
+            if (ids != null) {
+                ids.remove(ignoreSelfId);
+                if (! ids.isEmpty()) {
+                    LOGGER.error("Duplicate name, current Connection with id '{}' has name '{}' that already exists on entity with id '{}'",
+                        entity.getId().orElse("null"),
+                        c.getName(),
+                        ids.iterator().next());
+                    throw new EntityExistsException(
+                            "There already exists a Connection with name " + c.getName());
+                }
+            }
+        }
     }
 }

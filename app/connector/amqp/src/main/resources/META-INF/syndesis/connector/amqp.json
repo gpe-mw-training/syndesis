@@ -9,6 +9,7 @@
       "id": "@project.groupId@:@project.artifactId@:@project.version@"
     }
   ],
+  "connectorFactory": "io.syndesis.connector.amqp.AMQPConnectorFactory",
   "componentScheme": "amqp",
   "configuredProperties": {},
   "tags": [
@@ -82,11 +83,11 @@
       "javaType" : "java.lang.String",
       "enum": [
         {
-          "value": "false",
+          "value": "true",
           "label": "Disable"
         },
         {
-          "value": "true",
+          "value": "false",
           "label": "Enable"
         }
       ],
@@ -115,7 +116,7 @@
           "when": [
             {
               "id": "skipCertificateCheck",
-              "value": "true"
+              "value": "false"
             }
           ]
         }
@@ -140,7 +141,7 @@
           "when": [
             {
               "id": "skipCertificateCheck",
-              "value": "true"
+              "value": "false"
             }
           ]
         }
@@ -149,7 +150,7 @@
   },
   "actions": [
     {
-      "name": "Publish",
+      "name": "Publish messages",
       "description": "Send data to the destination you specify.",
       "id": "io.syndesis:amqp-publish-action",
       "pattern": "To",
@@ -161,7 +162,6 @@
         "outputDataShape": {
           "kind": "none"
         },
-        "connectorFactory": "io.syndesis.connector.amqp.AMQPConnectorFactory",
         "configuredProperties": {},
         "propertyDefinitionSteps": [
           {
@@ -227,7 +227,7 @@
       }
     },
     {
-      "name": "Subscribe",
+      "name": "Subscribe for messages",
       "description": "Receive data from the destination you specify.",
       "id": "io.syndesis:amqp-subscribe-action",
       "pattern": "From",
@@ -240,7 +240,6 @@
           "kind": "any"
         },
         "configuredProperties": {},
-        "connectorFactory": "io.syndesis.connector.amqp.AMQPConnectorFactory",
         "propertyDefinitionSteps": [
           {
             "name": "Select the AMQP Destination",
@@ -318,7 +317,7 @@
       }
     },
     {
-      "name": "Request",
+      "name": "Request response using messages",
       "description": "Send data to the destination you specify and receive a response.",
       "id": "io.syndesis:amqp-request-action",
       "pattern": "To",
@@ -330,7 +329,6 @@
         "outputDataShape": {
           "kind": "any"
         },
-        "connectorFactory": "io.syndesis.connector.amqp.AMQPConnectorFactory",
         "configuredProperties": {},
         "propertyDefinitionSteps": [
           {
