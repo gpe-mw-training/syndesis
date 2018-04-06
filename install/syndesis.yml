@@ -195,6 +195,8 @@ objects:
       component: syndesis-ui
     name: syndesis-ui
   spec:
+    # JA Bride:  setting all DCs to paused.  Will then start each one via ansible
+    paused: true
     replicas: 1
     selector:
       app: syndesis
@@ -336,6 +338,8 @@ objects:
       application: broker
     name: broker-amq
   spec:
+    # JA Bride:  setting all DCs to paused.  Will then start each one via ansible
+    paused: true
     replicas: 0
     selector:
       deploymentConfig: broker-amq
@@ -493,6 +497,8 @@ objects:
       app: syndesis
       component: syndesis-db
   spec:
+    # JA Bride:  setting all DCs to paused.  Will then start each one via ansible
+    paused: true
     replicas: 1
     selector:
       app: syndesis
@@ -613,6 +619,8 @@ objects:
       component: syndesis-meta
     name: syndesis-meta
   spec:
+    # JA Bride:  setting all DCs to paused.  Will then start each one via ansible
+    paused: true
     replicas: 1
     selector:
       app: syndesis
@@ -763,6 +771,8 @@ objects:
       component: syndesis-oauthproxy
     name: syndesis-oauthproxy
   spec:
+    # JA Bride:  setting all DCs to paused.  Will then start each one via ansible
+    paused: true
     replicas: 1
     selector:
       app: syndesis
@@ -891,6 +901,8 @@ objects:
       component: syndesis-server
     name: syndesis-server
   spec:
+    # JA Bride:  setting all DCs to paused.  Will then start each one via ansible
+    paused: true
     replicas: 1
     selector:
       app: syndesis
