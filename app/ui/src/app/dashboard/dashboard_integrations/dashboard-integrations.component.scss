@@ -2,10 +2,6 @@
 
 //----- Integration Board ----------------->>
 .integration-board {
-  .card-pf-body {
-    overflow: auto;
-  }
-
   .legend {
     padding: 0;
 
@@ -78,7 +74,7 @@
     }
 
     .list-pf-actions {
-      margin-left: 0;
+      margin-left: 10px;
     }
   }
 }

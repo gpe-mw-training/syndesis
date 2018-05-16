@@ -30,7 +30,8 @@ public interface OpenShiftService {
     String INTEGRATION_ID_LABEL = "syndesis.io/integration-id";
     String DEPLOYMENT_VERSION_LABEL = "syndesis.io/deployment-version";
     String USERNAME_LABEL = "syndesis.io/username";
-    String COMPONENT_LABEL = "component";
+    String COMPONENT_LABEL = "syndesis.io/component";
+    String INTEGRATION_NAME_LABEL = "syndesis.io/integration";
 
     /**
      * Start a previously created build with the data from the given directory
@@ -96,8 +97,9 @@ public interface OpenShiftService {
      * Checks if the deployment (Deployment and Build configurations, Image Streams etc) is scaled.
      * @param name of the deployment to delete
      * @param desiredReplicas how many replicas should be running for this method to return true
+     * @param labels a set of labels that need to be match.
      */
-    boolean isScaled(String name, int desiredReplicas);
+    boolean isScaled(String name, int desiredReplicas, Map<String, String> labels);
 
     /**
      * Check whether a given build is failed
@@ -117,6 +119,6 @@ public interface OpenShiftService {
      * Returns the currently logged in user.
      * @return The currently logged in user.
      */
-    User whoAmI(String token);
+    User whoAmI(String username);
 
 }

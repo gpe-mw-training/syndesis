@@ -15,25 +15,29 @@
  */
 package io.syndesis.server.openshift;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.User;
+import io.fabric8.openshift.api.model.UserBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigStatus;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.syndesis.common.util.Names;
 import io.syndesis.common.util.SyndesisServerException;
 
@@ -43,6 +47,12 @@ public class OpenShiftServiceImpl implements OpenShiftService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenShiftServiceImpl.class);
 
     private static final String OPENSHIFT_PREFIX = "i-";
+
+    // Labels used for generated objects
+    private static final Map<String, String> INTEGRATION_DEFAULT_LABELS = Collections.unmodifiableMap(new HashMap<String, String>() {{
+        put("syndesis.io/type", "integration");
+        put("syndesis.io/app", "syndesis");
+    }});
 
     private final NamespacedOpenShiftClient openShiftClient;
     private final OpenShiftConfigurationProperties config;
@@ -116,10 +126,14 @@ public class OpenShiftServiceImpl implements OpenShiftService {
 
 
     @Override
-    public boolean isScaled(String name, int desiredReplicas) {
-        String sName = openshiftName(name);
-        DeploymentConfig dc = openShiftClient.deploymentConfigs().withName(sName).get();
+    public boolean isScaled(String name, int desiredReplicas, Map<String, String> labels) {
+        List<DeploymentConfig> deploymentConfigs = getDeploymentsByLabel(labels);
+        if (deploymentConfigs.isEmpty()) {
+          return false;
+        }
 
+
+        DeploymentConfig dc = deploymentConfigs.get(0);
         int allReplicas = 0;
         int availableReplicas = 0;
         if (dc != null && dc.getStatus() != null) {
@@ -154,11 +168,9 @@ public class OpenShiftServiceImpl implements OpenShiftService {
     }
 
     @Override
-    public User whoAmI(String openShiftToken) {
-        return openShiftClient.withRequestConfig(
-            new RequestConfigBuilder().withOauthToken(openShiftToken).build()
-        ).call(OpenShiftClient::currentUser);
-    };
+    public User whoAmI(String username) {
+        return new UserBuilder().withNewMetadata().withName(username).and().build();
+    }
 
     private int nullSafe(Integer nr) {
         return nr != null ? nr : 0;
@@ -174,6 +186,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
         openShiftClient.imageStreams().withName(name).createOrReplaceWithNew()
             .withNewMetadata()
                 .withName(name)
+                .addToLabels(INTEGRATION_DEFAULT_LABELS)
             .endMetadata()
             .done();
     }
@@ -190,10 +203,11 @@ public class OpenShiftServiceImpl implements OpenShiftService {
                 .withName(name)
                 .addToAnnotations(deploymentData.getAnnotations())
                 .addToLabels(deploymentData.getLabels())
+                .addToLabels(INTEGRATION_DEFAULT_LABELS)
             .endMetadata()
             .withNewSpec()
                 .withReplicas(1)
-                .addToSelector("integration", name)
+                .addToSelector(INTEGRATION_NAME_LABEL, name)
                 .withNewStrategy()
                     .withType("Recreate")
                     .withNewResources()
@@ -204,8 +218,9 @@ public class OpenShiftServiceImpl implements OpenShiftService {
                 .withRevisionHistoryLimit(0)
                 .withNewTemplate()
                     .withNewMetadata()
-                        .addToLabels("integration", name)
+                        .addToLabels(INTEGRATION_NAME_LABEL, name)
                         .addToLabels(COMPONENT_LABEL, "integration")
+                        .addToLabels(INTEGRATION_DEFAULT_LABELS)
                         .addToLabels(deploymentData.getLabels())
                         .addToAnnotations(deploymentData.getAnnotations())
                         .addToAnnotations("prometheus.io/scrape", "true")
@@ -246,7 +261,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
                         .addToContainerNames(name)
                         .withNewFrom()
                             .withKind("ImageStreamTag")
-                            .withName(name + ":latest")
+                            .withName(name + ":" + deploymentData.getVersion())
                         .endFrom()
                     .endImageChangeParams()
                 .endTrigger()
@@ -266,6 +281,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
                 .withName(name)
                 .addToAnnotations(deploymentData.getAnnotations())
                 .addToLabels(deploymentData.getLabels())
+                .addToLabels(INTEGRATION_DEFAULT_LABELS)
             .endMetadata()
             .withNewSpec()
                 .withRunPolicy("SerialLatestOnly")
@@ -292,7 +308,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
                 .withNewOutput()
                     .withNewTo()
                     .withKind("ImageStreamTag")
-                    .withName(name + ":latest")
+                    .withName(name + ":" + deploymentData.getVersion())
                     .endTo()
                 .endOutput()
             .endSpec()
@@ -323,14 +339,36 @@ public class OpenShiftServiceImpl implements OpenShiftService {
         long end = System.currentTimeMillis() + timeUnit.toMillis(timeout);
         Build next = r;
 
+        int retriesLeft = config.getMaximumRetries();
         while ( System.currentTimeMillis() < end) {
             if (next.getStatus() != null && ("Complete".equals(next.getStatus().getPhase()) || "Failed".equals(next.getStatus().getPhase()))) {
                 return next;
             }
-            next = openShiftClient.builds().inNamespace(next.getMetadata().getNamespace()).withName(next.getMetadata().getName()).get();
-            Thread.sleep(5000);
+            try {
+                next = openShiftClient.builds().inNamespace(next.getMetadata().getNamespace()).withName(next.getMetadata().getName()).get();
+            } catch (KubernetesClientException e) {
+                checkRetryPolicy(e, retriesLeft--);
+            }
+            Thread.sleep(config.getPollingInterval());
         }
         throw SyndesisServerException.launderThrowable(new TimeoutException("Timed out waiting for build completion."));
+    }
+
+    /**
+     * Checks if Excpetion can be retried and if retries are left.
+     * @param e
+     * @param retries
+     */
+    private static void checkRetryPolicy(KubernetesClientException e, int retries) {
+        if (retries == 0) {
+            throw new KubernetesClientException("Retries exhausted.", e);
+        } else if (e.getCause() instanceof IOException) {
+            LOGGER.warn("Got: {}. Retrying", e.getMessage());
+        } else if (e.getStatus() != null && (e.getStatus().getCode() == 500 || e.getStatus().getCode() == 503)) {
+            LOGGER.warn("Received HTTP {} from server. Retrying", e.getStatus().getCode());
+        } else {
+            throw e;
+        }
     }
 
     protected static String openshiftName(String name) {

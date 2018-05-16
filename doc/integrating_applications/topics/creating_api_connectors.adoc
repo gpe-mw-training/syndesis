@@ -1,26 +1,18 @@
 [id='creating-api-connectors']
 = Creating API client connectors
 
-To create an API client connector, do one of the following:
-
-* Upload a Swagger 2.0 specification.
-* Provide a URL for a Swagger 2.0 specification.
-
-The Swagger specification describes an API that you want to connect to.
-{prodname} verifies that the Swagger specification is valid and contains
-the information required to create the connector. {prodname} provides
-information if there is invalid or missing content.
-
 To create an API client connector:
 
 . In the {prodname} navigation panel, click *Customizations* to display
 the *API Client Connectors* tab. Any API client connectors that are
 already available are listed here.
 . Click *Create API Connector*.
-. On the *Create API Client Connector* page, indicate whether you want
-to upload a Swagger file or specify a URL for a Swagger specification.
-. Specify a Swagger file to upload or specify a URL for a Swagger
-specification.
+. On the *Create API Client Connector* page, do one of the following:
++
+* Click *Browse* and select the Swagger file that you want to upload.
+* Select *Use a URL* and paste the URL for your Swagger specification
+in the input field. 
+
 . Click *Next*. If there is invalid or missing content, {prodname}
 displays information about what needs to be corrected. Select a different
 Swagger file to upload or click *Cancel*,
@@ -37,7 +29,7 @@ If you are satisfied with the action summary, click *Next*.
 . Indicate the API's security requirements by selecting one of the
 following:
 .. *No Security*
-.. *HTTP Basic Authorization* -- Enter the username and password you
+.. *HTTP Basic Authorization* -- Enter the user name and password you
 want to use to access the API.
 .. *OAuth* -- {prodname} prompts you to enter:
 ... *Authorization URL* is the location for registering {prodname} as
@@ -61,6 +53,11 @@ the base URL is `/api/v1` then the connection endpoint is
 mapping steps. If the Swagger file supports more than one schema then {prodname}
 uses the TLS (HTTPS) schema.
 . Review the connector details and optionally upload an icon for the connector.
+If you do not upload an icon, {prodname} generates one.
+You can upload an icon at a later time. When {prodname} displays
+the flow of an integration, it displays a connector's icon
+to represent connections that are created from that connector.
++
 To override a value obtained from
 the Swagger file, edit the field value that you want to change.
 After {prodname} creates a connector,
@@ -68,5 +65,5 @@ you cannot change it. To effect a change, you need to upload an updated
 Swagger file so that {prodname} can create a new connector.
 . When you are satisfied with the connector details, click *Create API Connector*.
 
-For details about using your new API connector in an integration, see
+For details about using your new API connector, see
 <<connecting-to-rest-apis>>.

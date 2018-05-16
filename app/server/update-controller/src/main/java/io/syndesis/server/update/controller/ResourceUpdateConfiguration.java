@@ -25,10 +25,7 @@ public class ResourceUpdateConfiguration {
     private boolean enabled;
 
     // Interval between check
-    private long checkInterval = 1;
-
-    // Time unit for check interval
-    private TimeUnit checkIntervalUnit = TimeUnit.MINUTES;
+    private Scheduler scheduler = new Scheduler();
 
     public boolean isEnabled() {
         return enabled;
@@ -38,19 +35,42 @@ public class ResourceUpdateConfiguration {
         this.enabled = enabled;
     }
 
-    public long getCheckInterval() {
-        return checkInterval;
+    public Scheduler getScheduler() {
+        return scheduler;
     }
 
-    public void setCheckInterval(long checkInterval) {
-        this.checkInterval = checkInterval;
-    }
+    public static class Scheduler {
+        // Enable/Disable connector upgrades scheduler
+        private boolean enabled = true;
 
-    public TimeUnit getCheckIntervalUnit() {
-        return checkIntervalUnit;
-    }
+        // Interval between check
+        private long interval = 60;
 
-    public void setCheckIntervalUnit(TimeUnit checkIntervalUnit) {
-        this.checkIntervalUnit = checkIntervalUnit;
+        // Time unit for check interval
+        private TimeUnit intervalUnit = TimeUnit.SECONDS;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public long getInterval() {
+            return interval;
+        }
+
+        public void setInterval(long interval) {
+            this.interval = interval;
+        }
+
+        public TimeUnit getIntervalUnit() {
+            return intervalUnit;
+        }
+
+        public void setIntervalUnit(TimeUnit intervalUnit) {
+            this.intervalUnit = intervalUnit;
+        }
     }
 }

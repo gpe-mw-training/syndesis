@@ -79,6 +79,20 @@ public class SwaggerConnectorComponentTest {
     }
 
     @Test
+    public void shouldSetBasicAuthorizationHeader() {
+        final SwaggerConnectorComponent component = new SwaggerConnectorComponent();
+
+        component.setAuthenticationType(AuthenticationType.basic);
+        component.setUsername("username");
+        component.setPassword("dolphins");
+
+        final HashMap<String, Object> headers = new HashMap<>();
+        component.addAuthenticationHeadersTo(headers);
+
+        assertThat(headers).containsEntry("Authorization", "Basic dXNlcm5hbWU6ZG9scGhpbnM=");
+    }
+
+    @Test
     public void shouldSetOAuth2AuthorizationHeader() {
         final SwaggerConnectorComponent component = new SwaggerConnectorComponent();
 
@@ -89,5 +103,27 @@ public class SwaggerConnectorComponentTest {
         component.addAuthenticationHeadersTo(headers);
 
         assertThat(headers).containsEntry("Authorization", "Bearer the-token");
+    }
+
+    @Test
+    public void shouldSetStatusCodesForRefreshTokenRetry() {
+        final SwaggerConnectorComponent component = new SwaggerConnectorComponent();
+
+        assertThat(component.getRefreshTokenRetryStatuses()).isEmpty();
+
+        component.setRefreshTokenRetryStatuses("");
+        assertThat(component.getRefreshTokenRetryStatuses()).isEmpty();
+
+        component.setRefreshTokenRetryStatuses(null);
+        assertThat(component.getRefreshTokenRetryStatuses()).isEmpty();
+
+        component.setRefreshTokenRetryStatuses("1");
+        assertThat(component.getRefreshTokenRetryStatuses()).isEqualTo("1");
+
+        component.setRefreshTokenRetryStatuses("1,2");
+        assertThat(component.getRefreshTokenRetryStatuses()).isEqualTo("1,2");
+
+        component.setRefreshTokenRetryStatuses(" 1 ,2 , 3");
+        assertThat(component.getRefreshTokenRetryStatuses()).isEqualTo("1,2,3");
     }
 }

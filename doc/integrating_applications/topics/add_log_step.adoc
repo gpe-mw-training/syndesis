@@ -9,12 +9,13 @@ To log additional information between any two steps, add a log step to the
 integration. For each message that it receives, a log step can provide
 one or more of the following:
 
-* The message's header
-* The message's body
-* Text that you specify
+* The message's header, which provides metadata about the message.
+* The message's body, which provides the content of the message.
+* Text that you specify either explicitly or through evaluation of an 
+http://camel.apache.org/simple.html[Apache Camel Simple language] expression. 
 
 To add a log step, you must be creating a new integration or
-editing the draft of an integration. The integration must already have
+editing an integration. The integration must already have
 its start and finish connections.
 
 To add a log step:
@@ -25,9 +26,15 @@ at the location where you want to add a log step.
 . In the popup, click *Add a Step*.
 . On the *Choose a Step* page, click *Log*.
 . On the *Configure Log Step* page, select the content that you want
-to log. If you select *Custom text*, then enter the text that you
-want to log in the text input field.
-. When log step configuration is complete, in the upper right, click *Next*.
+to log. If you select *Custom text*, then in the text input field, 
+enter one of the following:
+* The text that you want to log
+* A Camel Simple language expression
+
++
+If you enter an expression, {prodname} resolves the 
+expression and logs the resulting text. 
+. When log step configuration is complete, click *Done*.
 . When the integration is complete, publish it to start seeing output
 from the new log step.
 

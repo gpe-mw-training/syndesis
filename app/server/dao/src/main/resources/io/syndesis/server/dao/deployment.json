@@ -27,7 +27,7 @@
       "icon": "fa-link",
       "camelConnectorGAV": "io.syndesis.connector:connector-rest-swagger:@syndesis.version@",
       "camelConnectorPrefix": "swagger-operation",
-      "connectorGroup" : {
+      "connectorGroup": {
         "id": "swagger-connector-template"
       },
       "properties": {
@@ -52,7 +52,7 @@
           "displayName": "Host",
           "group": "producer",
           "label": "producer",
-          "required": false,
+          "required": true,
           "type": "string",
           "javaType": "java.lang.String",
           "tags": [],
@@ -66,7 +66,7 @@
           "displayName": "Base path",
           "group": "producer",
           "label": "producer",
-          "required": false,
+          "required": true,
           "type": "string",
           "javaType": "java.lang.String",
           "tags": [],
@@ -80,7 +80,7 @@
           "displayName": "Authentication Type",
           "group": "producer",
           "label": "producer",
-          "required": false,
+          "required": true,
           "type": "string",
           "javaType": "java.lang.String",
           "tags": [
@@ -146,28 +146,30 @@
           "displayName": "Host",
           "group": "producer",
           "label": "producer",
-          "required": false,
+          "required": true,
           "type": "string",
           "javaType": "java.lang.String",
           "tags": [],
           "deprecated": false,
           "secret": false,
           "componentProperty": true,
-          "description": "Scheme hostname and port to direct the HTTP requests to in the form of https://hostname:port. Can be configured at the endpoint component or in the correspoding REST configuration in the Camel Context. If you give this component a name (e.g. petstore) that REST configuration is consulted first rest-swagger next and global configuration last. If set overrides any value found in the Swagger specification RestConfiguration. Can be overriden in endpoint configuration."
+          "description": "Scheme hostname and port to direct the HTTP requests to in the form of https://hostname:port. Can be configured at the endpoint component or in the correspoding REST configuration in the Camel Context. If you give this component a name (e.g. petstore) that REST configuration is consulted first rest-swagger next and global configuration last. If set overrides any value found in the Swagger specification RestConfiguration. Can be overriden in endpoint configuration.",
+          "order": 10
         },
         "basePath": {
           "kind": "property",
           "displayName": "Base path",
           "group": "producer",
           "label": "producer",
-          "required": false,
+          "required": true,
           "type": "string",
           "javaType": "java.lang.String",
           "tags": [],
           "deprecated": false,
           "secret": false,
           "componentProperty": true,
-          "description": "API basePath for example /v2. Default is unset if set overrides the value present in Swagger specification."
+          "description": "API basePath for example /v2. Default is unset if set overrides the value present in Swagger specification.",
+          "order": 11
         },
         "authenticationType": {
           "kind": "property",
@@ -183,7 +185,8 @@
           "deprecated": false,
           "secret": false,
           "componentProperty": true,
-          "description": "Type of authentication used to connect to the API"
+          "description": "Type of authentication used to connect to the API",
+          "order": 1
         },
         "clientId": {
           "kind": "property",
@@ -199,7 +202,8 @@
           "deprecated": false,
           "secret": false,
           "componentProperty": true,
-          "description": "OAuth Client ID, sometimes called Consumer Key"
+          "description": "OAuth Client ID, sometimes called Consumer Key",
+          "order": 2
         },
         "clientSecret": {
           "kind": "property",
@@ -215,7 +219,8 @@
           "deprecated": false,
           "secret": true,
           "componentProperty": true,
-          "description": "OAuth Client Secret, sometimes called Consumer Secret"
+          "description": "OAuth Client Secret, sometimes called Consumer Secret",
+          "order": 3
         },
         "accessToken": {
           "kind": "property",
@@ -231,7 +236,25 @@
           "deprecated": false,
           "secret": true,
           "componentProperty": true,
-          "description": "OAuth Access token"
+          "description": "OAuth Access token",
+          "order": 4
+        },
+        "refreshToken": {
+          "kind": "property",
+          "displayName": "OAuth Refresh token",
+          "group": "producer",
+          "label": "producer",
+          "required": false,
+          "type": "string",
+          "javaType": "java.lang.String",
+          "tags": [
+            "oauth-refresh-token"
+          ],
+          "deprecated": false,
+          "secret": true,
+          "componentProperty": true,
+          "description": "OAuth Refresh token",
+          "order": 5
         },
         "authorizationEndpoint": {
           "kind": "property",
@@ -247,7 +270,8 @@
           "deprecated": false,
           "secret": false,
           "componentProperty": true,
-          "description": "URL for the start of the OAuth flow"
+          "description": "URL for the start of the OAuth flow",
+          "order": 6
         },
         "tokenEndpoint": {
           "kind": "property",
@@ -263,7 +287,8 @@
           "deprecated": false,
           "secret": false,
           "componentProperty": true,
-          "description": "URL to fetch the OAuth Access token"
+          "description": "URL to fetch the OAuth Access token",
+          "order": 7
         },
         "oauthScopes": {
           "kind": "property",
@@ -279,14 +304,71 @@
           "deprecated": false,
           "secret": false,
           "componentProperty": true,
-          "description": "URL to fetch the OAuth Access token"
+          "description": "URL to fetch the OAuth Access token",
+          "order": 8
+        },
+        "tokenStrategy": {
+          "kind": "property",
+          "displayName": "OAuth Token strategy",
+          "group": "producer",
+          "label": "producer",
+          "required": false,
+          "type": "hidden",
+          "javaType": "java.lang.String",
+          "tags": [
+            "oauth-token-strategy"
+          ],
+          "deprecated": false,
+          "secret": false,
+          "componentProperty": true
+        },
+        "authorizeUsingParameters": {
+          "kind": "property",
+          "displayName": "Should the implementation send client id and client secret when performing OAuth flow",
+          "group": "producer",
+          "label": "producer",
+          "required": false,
+          "type": "hidden",
+          "javaType": "java.lang.String",
+          "tags": [
+            "oauth-authorize-using-parameters"
+          ],
+          "deprecated": false,
+          "secret": false,
+          "componentProperty": true
+        },
+        "refreshTokenRetryStatuses": {
+          "kind": "property",
+          "displayName": "Specification",
+          "group": "producer",
+          "label": "producer",
+          "required": false,
+          "type": "hidden",
+          "javaType": "java.lang.String",
+          "deprecated": false,
+          "secret": false,
+          "componentProperty": true,
+          "description": "Comma separated list of HTTP statuses for which to refresh the OAuth access token using the refresh token"
+        },
+        "accessTokenExpiresAt": {
+          "kind": "property",
+          "displayName": "",
+          "group": "producer",
+          "label": "producer",
+          "required": false,
+          "type": "hidden",
+          "javaType": "java.lang.Long",
+          "deprecated": false,
+          "secret": false,
+          "componentProperty": true,
+          "description": "Seconds in UTC when the access token expires"
         },
         "specification": {
           "kind": "property",
           "displayName": "Specification",
           "group": "producer",
           "label": "producer",
-          "required": false,
+          "required": true,
           "type": "hidden",
           "javaType": "java.lang.String",
           "tags": [
@@ -309,7 +391,8 @@
           "deprecated": false,
           "secret": false,
           "componentProperty": true,
-          "description": "Username to authenticate with"
+          "description": "Username to authenticate with",
+          "order": 2
         },
         "password": {
           "kind": "property",
@@ -322,7 +405,8 @@
           "deprecated": false,
           "secret": true,
           "componentProperty": true,
-          "description": "Password to authenticate with"
+          "description": "Password to authenticate with",
+          "order": 3
         }
       }
     }

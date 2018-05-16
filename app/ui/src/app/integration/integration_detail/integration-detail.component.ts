@@ -36,8 +36,8 @@ const replaceDraft = {
 } as PFAction;
 const stopIntegration = {
   id: STOP_INTEGRATION,
-  title: 'Stop Integration',
-  tooltip: 'Stop this integration'
+  title: 'Unpublish',
+  tooltip: 'Unpublish this integration'
 } as PFAction;
 const createDraft = {
   id: CREATE_DRAFT,
@@ -104,13 +104,13 @@ export class IntegrationDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  nameUpdated($event) {
-    this.attributeUpdated({ 'name': $event });
+  nameUpdated(id: string, $event) {
+    this.attributeUpdated(id, { 'name': $event });
   }
 
-  attributeUpdated(updatedAttribute: { [key: string]: string }) {
+  attributeUpdated(id: string, updatedAttribute: { [key: string]: string }) {
     this.integrationStore
-      .patch(<any>this.integration, updatedAttribute)
+      .patch(id, updatedAttribute)
       .toPromise()
       .then((update: Integration) => {
         // silently succeed
@@ -198,8 +198,7 @@ export class IntegrationDetailComponent implements OnInit, OnDestroy {
 
         this.onRefreshMetrics(integrationId);
 
-        const integration$ = this.integrationSupportService.watchOverview(integrationId);
-        this.integrationSubscription = integration$.subscribe((integration: IntegrationOverview) => {
+        this.integrationSubscription = this.integrationStore.resource.subscribe((integration: IntegrationOverview) => {
           this.loading = false;
           this.integration = integration;
           this.deploymentActionConfigs = {};
@@ -226,6 +225,8 @@ export class IntegrationDetailComponent implements OnInit, OnDestroy {
             this.deploymentActionConfigs[deployment.id] = actionConfig;
           }
         });
+        this.loading = true;
+        this.integrationStore.load(integrationId);
       });
   }
 

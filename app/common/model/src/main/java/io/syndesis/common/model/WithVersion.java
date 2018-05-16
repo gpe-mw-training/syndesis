@@ -22,4 +22,11 @@ public interface WithVersion {
     default int getVersion() {
         return 1;
     }
+
+    /**
+     * Marker interface to indicate that the revision should be automatically updated
+     * by the data manager
+     */
+    interface AutoUpdatable {
+    }
 }

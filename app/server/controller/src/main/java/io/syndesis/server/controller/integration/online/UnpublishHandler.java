@@ -21,14 +21,21 @@ import io.syndesis.common.util.Labels;
 import io.syndesis.server.controller.StateChangeHandler;
 import io.syndesis.server.controller.StateUpdate;
 import io.syndesis.server.openshift.OpenShiftService;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class UnpublishHandler extends BaseHandler implements StateChangeHandler {
+
+    private static final Logger LOG = LoggerFactory.getLogger(UnpublishHandler.class);
 
     UnpublishHandler(OpenShiftService openShiftService) {
         super(openShiftService);
@@ -50,15 +57,21 @@ public class UnpublishHandler extends BaseHandler implements StateChangeHandler 
         labels.put(OpenShiftService.INTEGRATION_ID_LABEL, Labels.validate(integrationDeployment.getIntegrationId().get()));
         labels.put(OpenShiftService.DEPLOYMENT_VERSION_LABEL, String.valueOf(integrationDeployment.getVersion()));
 
-        if (!openShiftService().getDeploymentsByLabel(labels).isEmpty()) {
-            try {
-                openShiftService().scale(integrationDeployment.getSpec().getName(), labels, 0, 1, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return new StateUpdate(currentState, stepsDone);
-            }
-        } else  {
-            currentState = IntegrationDeploymentState.Unpublished;
+        List<DeploymentConfig> deployments = openShiftService().getDeploymentsByLabel(labels);
+        Boolean isDeployed = !deployments.stream().filter(d -> d.getSpec().getReplicas() != 0).collect(Collectors.toList()).isEmpty();
+        if (isDeployed) {
+          try {
+              LOG.info("Undeploying integration deployment:{} version:{}", integrationDeployment.getSpec().getName(), integrationDeployment.getVersion());
+             openShiftService().scale(integrationDeployment.getSpec().getName(), labels, 0, 1, TimeUnit.MINUTES);
+           } catch (InterruptedException e) {
+             Thread.currentThread().interrupt();
+             return new StateUpdate(currentState, stepsDone);
+           }
+         }
+
+        Boolean isUndeployed = !deployments.stream().filter(d -> d.getStatus().getAvailableReplicas() == 0).collect(Collectors.toList()).isEmpty();
+        if(isUndeployed){
+           currentState = IntegrationDeploymentState.Unpublished;
         }
 
         return new StateUpdate(currentState, stepsDone);

@@ -98,9 +98,10 @@ public class PublishHandler extends BaseHandler implements StateChangeHandler {
             deactivatePreviousDeployments(integrationDeployment);
 
             DeploymentData deploymentData = createDeploymentData(integration, integrationDeployment);
-            stepPerformer.perform("build", this::build, deploymentData);
+            String buildLabel = "buildv" + deploymentData.getVersion();
+            stepPerformer.perform(buildLabel, this::build, deploymentData);
 
-            deploymentData = new DeploymentData.Builder().createFrom(deploymentData).withImage(stepPerformer.stepsPerformed.get("build")).build();
+            deploymentData = new DeploymentData.Builder().createFrom(deploymentData).withImage(stepPerformer.stepsPerformed.get(buildLabel)).build();
             if (hasPublishedDeployments(integrationDeployment)) {
                 return new StateUpdate(IntegrationDeploymentState.Unpublished, integrationDeployment.getStepsDone(), "Integration has still active deployments. Will retry shortly");
             }
@@ -203,7 +204,10 @@ public class PublishHandler extends BaseHandler implements StateChangeHandler {
     }
 
     public boolean isRunning(IntegrationDeployment integrationDeployment) {
-        return openShiftService().isScaled(integrationDeployment.getSpec().getName(), 1);
+        Map<String, String> labels = new HashMap<>();
+        labels.put(OpenShiftService.INTEGRATION_ID_LABEL, Labels.validate(integrationDeployment.getIntegrationId().get()));
+        labels.put(OpenShiftService.DEPLOYMENT_VERSION_LABEL, String.valueOf(integrationDeployment.getVersion()));
+        return openShiftService().isScaled(integrationDeployment.getSpec().getName(), 1, labels);
     }
 
     private static String propsToString(Properties data) {
@@ -219,9 +223,8 @@ public class PublishHandler extends BaseHandler implements StateChangeHandler {
         }
     }
 
-
-    private Integration integrationOf(IntegrationDeployment integrationDeployment) {
-        return dataManager.fetch(Integration.class, integrationDeployment.getIntegrationId().orElseThrow(() -> new IllegalStateException("IntegrationDeployment doesn't have integration id.")));
+    private static Integration integrationOf(IntegrationDeployment integrationDeployment) {
+        return integrationDeployment.getSpec();
     }
 
     /**

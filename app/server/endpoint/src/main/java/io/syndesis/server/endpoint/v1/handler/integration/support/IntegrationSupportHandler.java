@@ -22,8 +22,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -51,12 +49,11 @@ import io.syndesis.common.model.ListResult;
 import io.syndesis.common.model.ModelExport;
 import io.syndesis.common.model.Schema;
 import io.syndesis.common.model.WithId;
-import io.syndesis.common.model.bulletin.IntegrationBulletinBoard;
 import io.syndesis.common.model.connection.Connection;
 import io.syndesis.common.model.connection.Connector;
 import io.syndesis.common.model.extension.Extension;
 import io.syndesis.common.model.integration.Integration;
-import io.syndesis.common.model.integration.IntegrationDeployment;
+import io.syndesis.common.model.integration.IntegrationOverview;
 import io.syndesis.common.model.integration.Step;
 import io.syndesis.common.util.Json;
 import io.syndesis.common.util.Names;
@@ -64,16 +61,7 @@ import io.syndesis.integration.api.IntegrationProjectGenerator;
 import io.syndesis.integration.api.IntegrationResourceManager;
 import io.syndesis.server.dao.file.FileDataManager;
 import io.syndesis.server.dao.manager.DataManager;
-import io.syndesis.server.dao.manager.operators.IdPrefixFilter;
-import io.syndesis.server.dao.manager.operators.ReverseFilter;
-import io.syndesis.server.endpoint.util.PaginationFilter;
-import io.syndesis.server.endpoint.util.ReflectiveSorter;
-import io.syndesis.server.endpoint.v1.handler.connection.ConnectionHandler;
-import io.syndesis.server.endpoint.v1.handler.integration.DeletedFilter;
 import io.syndesis.server.endpoint.v1.handler.integration.IntegrationHandler;
-import io.syndesis.server.endpoint.v1.handler.integration.model.IntegrationOverview;
-import io.syndesis.server.endpoint.v1.operations.PaginationOptionsFromQueryParams;
-import io.syndesis.server.endpoint.v1.operations.SortOptionsFromQueryParams;
 import io.syndesis.server.jsondb.CloseableJsonDB;
 import io.syndesis.server.jsondb.JsonDB;
 import io.syndesis.server.jsondb.dao.JsonDbDao;
@@ -85,7 +73,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import static io.syndesis.server.endpoint.v1.handler.integration.IntegrationHandler.addEntry;
 import static org.springframework.util.StreamUtils.nonClosing;
 
 @Path("/integration-support")
@@ -104,7 +91,6 @@ public class IntegrationSupportHandler {
     private final DataManager dataManager;
     private final IntegrationResourceManager resourceManager;
     private final IntegrationHandler integrationHandler;
-    private final ConnectionHandler connectionHandler;
     private final FileDataManager extensionDataManager;
 
     public IntegrationSupportHandler(
@@ -114,7 +100,6 @@ public class IntegrationSupportHandler {
         final DataManager dataManager,
         final IntegrationResourceManager resourceManager,
         final IntegrationHandler integrationHandler,
-        final ConnectionHandler connectionHandler,
         final FileDataManager extensionDataManager) {
         this.migrator = migrator;
         this.jsonDB = jsonDB;
@@ -123,7 +108,6 @@ public class IntegrationSupportHandler {
         this.dataManager = dataManager;
         this.resourceManager = resourceManager;
         this.integrationHandler = integrationHandler;
-        this.connectionHandler = connectionHandler;
         this.extensionDataManager = extensionDataManager;
     }
 
@@ -135,26 +119,7 @@ public class IntegrationSupportHandler {
     @Produces(MediaType.APPLICATION_JSON)
     @Path(value = "/overviews")
     public ListResult<IntegrationOverview> getOverviews(@Context  UriInfo uriInfo) {
-
-        Stream<Integration> stream = getDataManager().fetchAll(Integration.class,
-            new DeletedFilter(),
-            new ReflectiveSorter<>(Integration.class, new SortOptionsFromQueryParams(uriInfo)),
-            new PaginationFilter<>(new PaginationOptionsFromQueryParams(uriInfo))
-        ).getItems().stream();
-
-        return ListResult.of(stream.map(integration -> {
-
-            String id = integration.getId().get();
-            List<IntegrationDeployment> deployments = getDataManager().fetchAll(IntegrationDeployment.class,
-                new IdPrefixFilter<>(id +":"), ReverseFilter.getInstance())
-                .getItems();
-
-            Optional<IntegrationBulletinBoard> bulletins = Optional
-                .ofNullable(getDataManager().fetch(IntegrationBulletinBoard.class, id));
-
-            // find the deployment we want published..
-            return new IntegrationOverview(integration, bulletins, deployments.stream().findFirst());
-        }).collect(Collectors.toList()));
+        return integrationHandler.list(uriInfo);
     }
 
     @POST
@@ -184,7 +149,7 @@ public class IntegrationSupportHandler {
             }
         }
         for (String id : ids) {
-            Integration integration = integrationHandler.get(id);
+            Integration integration = integrationHandler.getIntegration(id);
             addToExport(memJsonDB, integration);
             resourceManager.collectDependencies(integration.getSteps(), true).stream()
                 .filter(Dependency::isExtension)
@@ -348,7 +313,7 @@ public class IntegrationSupportHandler {
         return result;
     }
 
-    private  void importIntegrations(SecurityContext sec, JsonDbDao<Integration> export, ArrayList<ChangeEvent> result) {
+    private void importIntegrations(SecurityContext sec, JsonDbDao<Integration> export, List<ChangeEvent> result) {
         for (Integration integration : export.fetchAll().getItems()) {
             Integration.Builder builder = new Integration.Builder()
                 .createFrom(integration)
@@ -367,25 +332,27 @@ public class IntegrationSupportHandler {
                 integrationHandler.update(id, builder.version(previous.getVersion()+1).build());
                 result.add(ChangeEvent.of("updated", integration.getKind().getModelName(), id));
             }
-            integrationHandler.updateBulletinBoard(id);
-            break;
         }
     }
 
-    private <T extends WithId<T>> void importModels(JsonDbDao<T> export, ArrayList<ChangeEvent> result) {
+    private <T extends WithId<T>> void importModels(JsonDbDao<T> export, List<ChangeEvent> result) {
         for (T item : export.fetchAll().getItems()) {
             Kind kind = item.getKind();
             String id = item.getId().get();
             if (dataManager.fetch(export.getType(), id) == null) {
                 dataManager.create(item);
 
-                if( kind == Kind.Connection ) {
-                    connectionHandler.updateBulletinBoard(id);
-                }
-
                 result.add(ChangeEvent.of("created", kind.getModelName(), id));
             }
         }
+    }
+
+    private static void addEntry(ZipOutputStream os, String path, byte[] content) throws IOException {
+        ZipEntry entry = new ZipEntry(path);
+        entry.setSize(content.length);
+        os.putNextEntry(entry);
+        os.write(content);
+        os.closeEntry();
     }
 
 }

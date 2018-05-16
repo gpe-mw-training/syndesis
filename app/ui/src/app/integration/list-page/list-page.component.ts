@@ -4,13 +4,15 @@ import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FilterField, NotificationType } from 'patternfly-ng';
 import { IntegrationStore, ChangeEvent } from '@syndesis/ui/store';
-import { IntegrationOverviews, IntegrationSupportService } from '@syndesis/ui/platform';
+import { IntegrationOverviews, IntegrationSupportService, Integration } from '@syndesis/ui/platform';
 import { ModalService, NotificationService } from '@syndesis/ui/common';
 import {
   FileUploader,
   FileItem,
   ParsedResponseHeaders
 } from 'ng2-file-upload';
+import { environment } from '../../../environments/environment';
+import { HttpXsrfTokenExtractor } from '@angular/common/http';
 
 @Component({
   selector: 'syndesis-integration-list-page',
@@ -18,13 +20,12 @@ import {
   styleUrls: ['./list-page.component.scss']
 })
 export class IntegrationListPage implements OnInit {
+  loading$: Observable<boolean>;
   public uploader: FileUploader;
-
-  loading = true;
-  integrations: Observable<IntegrationOverviews>;
-  filteredIntegrations: Subject<
-    IntegrationOverviews
-  > = new BehaviorSubject(<IntegrationOverviews>{});
+  integrations$: Observable<Integration[]>;
+  filteredIntegrations$: Subject<
+    Integration[]
+  > = new BehaviorSubject(<Integration[]>{});
   filterFields: Array<FilterField> = [
     /*
     {
@@ -44,17 +45,24 @@ export class IntegrationListPage implements OnInit {
   constructor(
     private modalService: ModalService,
     private integrationSupportService: IntegrationSupportService,
+    private integrationStore: IntegrationStore,
+    private tokenExtractor: HttpXsrfTokenExtractor,
     public notificationService: NotificationService,
   ) {
+    this.integrations$ = integrationStore.list;
+    this.loading$ = integrationStore.loading;
   }
 
   ngOnInit() {
-    this.integrations = this.integrationSupportService.watchOverviews();
-    this.integrations.subscribe( integrations => {
-      this.loading = false;
-    });
+    this.integrationStore.loadAll();
     this.uploader = new FileUploader({
       url: this.integrationSupportService.importIntegrationURL(),
+      headers: [
+        {
+          name: environment.xsrf.headerName,
+          value: this.tokenExtractor.getToken() || environment.xsrf.defaultTokenValue,
+        }
+      ],
       disableMultipart: true,
       autoUpload: true
     });

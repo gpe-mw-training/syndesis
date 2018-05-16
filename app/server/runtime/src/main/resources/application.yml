@@ -75,8 +75,10 @@ resource:
   update:
     controller:
       enabled: true
-      check-interval: 1
-      check-interval-unit: MINUTES
+      scheduler:
+        enabled: true
+        interval: 60
+        interval-unit: SECONDS
 
 # OpenShift infra value
 openshift:
@@ -86,6 +88,8 @@ openshift:
   namespace: "myproject"
   # Namespace where the image stream for the builder image can be found
   imageStreamNamespace: ""
+  maximumRetries: 3
+  pollingInterval: 5000
 
 # GitHub service specific config
 github:
@@ -115,6 +119,10 @@ prometheus:
   integrationIdLabel: syndesis_io_integration_id
   # metrics label containing deployment version
   deploymentVersionLabel: syndesis_io_deployment_version
+  # metrics label containing component type 'integration'
+  componentLabel: syndesis_io_component
+  # metrics label containing Camel metric type 'context'
+  typeLabel: type
   # range for metrics history for past deployments
   metricsHistoryRange: 30d
 

@@ -51,14 +51,10 @@ public class IntegrationLoggingEnabledTest {
 
     @Test
     public void testContextConfiguration() {
-        assertThat(applicationContext.getBeansOfType(CamelContextConfiguration.class)).isNotNull();
-        assertThat(applicationContext.getBeansOfType(CamelContextConfiguration.class).values()).hasAtLeastOneElementOfType(IntegrationLoggingContextConfiguration.class);
+        assertThat(applicationContext.getBeansOfType(CamelContextConfiguration.class)).hasSize(2);
+        assertThat(applicationContext.getBeansOfType(ActivityTracker.class)).hasSize(1);
+        assertThat(applicationContext.getBeansOfType(ActivityTracker.class).values()).hasAtLeastOneElementOfType(ActivityTracker.SysOut.class);
         assertThat(camelContext.getLogListeners()).hasAtLeastOneElementOfType(IntegrationLoggingListener.class);
         assertThat(camelContext.getUuidGenerator()).isNotInstanceOf(DefaultUuidGenerator.class);
-    }
-
-    @Test
-    public void testLoggingRoutePolicyFactory() {
-        assertThat(camelContext.getRoutePolicyFactories()).hasAtLeastOneElementOfType(IntegrationLoggingRoutePolicyFactory.class);
     }
 }

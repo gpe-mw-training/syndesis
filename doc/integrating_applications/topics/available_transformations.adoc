@@ -15,11 +15,11 @@ Date includes, for example, `date`, `Time`, `ZonedDateTime`.
 |None
 |Return the absolute value of a number.
 
-| `Add`
-| collection, array, or map
-| number
-| None
-| Add the numbers in the set's values. 
+// | `Add`
+// | collection, array, or map
+// | number
+// | None
+// | Add the numbers in the set's values. 
 
 | `AddDays`
 | date
@@ -39,11 +39,11 @@ Date includes, for example, `date`, `Time`, `ZonedDateTime`.
 | string
 | Append a string to the end of a string. The default is to append nothing. 
 
-| `Average`
-| collection, array, or map
-| number
-| None
-| Return the average of the numbers in the set. 
+// | `Average`
+// | collection, array, or map
+// | number
+// | None
+// | Return the average of the numbers in the set. 
 
 | `Camelize`
 | string
@@ -65,12 +65,12 @@ subsequent word.
 | None
 | Return the whole number ceiling of a number.
 
-|`Concatenate`
-| collection, array, or set
-| string
-| `delimiter`
-| Concatenate the values in a set by separating them with the delimiter if
-it is specified. 
+// |`Concatenate`
+// | collection, array, or set
+// | string
+// | `delimiter`
+// | Concatenate the values in a set by separating them with the delimiter if
+// it is specified. 
 
 | `Contains`
 | any
@@ -84,8 +84,9 @@ it is specified.
 | `fromUnit`*
 
 `toUnit` *
-| Convert a number that represents an area to another unit. The `fromUnit` and
-`toUnit` parameters can be square feet, square meters, or square miles. 
+| Convert a number that represents an area to another unit. For each of the `fromUnit` and
+`toUnit` parameters, specify a string whose value is 
+`Square Foot`, `Square Meter`, or `Square Mile`.
 
 |`ConvertDistanceUnit`
 | number
@@ -93,8 +94,9 @@ it is specified.
 | `fromUnit` *
 
 `toUnit` *
-| Convert a number that represents a distance to another unit. The
-`fromUnit` and `toUnit` parameters can be feet, inches, meters, miles, or yards.
+| Convert a number that represents a distance to another unit. For each of the
+`fromUnit` and `toUnit` parameters, specify a string whose value is 
+`Foot`, `Inch`, `Meter`, `Mile`, or `Yard`.
 
 | `ConvertMassUnit`
 | number
@@ -102,8 +104,8 @@ it is specified.
 | `fromUnit` *
 
 `toUnit` *
-| Convert a number that represents mass to another unit. The
-`fromUnit` and `toUnit` parameters can be kilograms or pounds. 
+| Convert a number that represents mass to another unit. For each of the
+`fromUnit` and `toUnit` parameters, specify a string whose value is `Kilo Gram` or `Pound`. 
 
 |`ConvertVolumeUnit`
 | number
@@ -111,9 +113,9 @@ it is specified.
 | `fromUnit` *
 
 `toUnit` *
-| Convert a number that represents volume to another unit. The
-`fromUnit` and `toUnit` parameters can be cubic feet, cubic meters,
-gallons, or liters. 
+| Convert a number that represents volume to another unit. For each of the 
+`fromUnit` and `toUnit` parameters, specify a string whose value is 
+`Cubic Foot`, `Cubic Meter`, `Gallon US Fluid`, or `Liter`.
 
 |`CurrentDate`
 |None
@@ -145,12 +147,12 @@ gallons, or liters.
 | None
 | Return the day of the year (1 through 366) that corresponds to the date. 
 
-|`Divide`
-| collection, array, or map
-| number
-| None
-| For each value in a set, divide it by the next value in the set. 
-For a normal division operation, there are two values in the set. 
+// |`Divide`
+// | collection, array, or map
+// | number
+// | None
+// | For each value in a set, divide it by the next value in the set. 
+// For a normal division operation, there are two values in the set. 
 
 |`EndsWith`
 | string
@@ -218,7 +220,7 @@ as Java and C.
 | number
 | None
 | Return the length of the field, or `-1` if the field is null.
-For a collection, return the number of entries. 
+// For a collection, return the number of entries. 
 
 |`Lowercase`
 |string
@@ -226,23 +228,23 @@ For a collection, return the number of entries.
 |None
 |Convert a string to lowercase.
 
-| `Maximum`
-| collection, array, or map
-| number
-| None
-| Return the highest number that is in the set.
+// | `Maximum`
+// | collection, array, or map
+// | number
+// | None
+// | Return the highest number that is in the set.
 
-| `Minimum`
-| collection, array, or map
-| number
-| None
-| Return the lowest number that is in the set.
+// | `Minimum`
+// | collection, array, or map
+// | number
+// | None
+// | Return the lowest number that is in the set.
 
-| `Multiply`
-| collection, array, or map
-| number
-| None
-| Multiply the numbers in a set. 
+// | `Multiply`
+// | collection, array, or map
+// | number
+// | None
+// | Multiply the numbers in a set. 
 
 | `Normalize`
 | string
@@ -357,12 +359,12 @@ from the supplied inclusive `startIndex` to the supplied exclusive
 `endIndex`. Both indexes start at zero. The default value of `endIndex` is the
 length of the string before the supplied `match` string.
 
-| `Subtract`
-| collection, array, or set
-| number
-| None
-| Return the result of subtracting each entry in the set from its previous entry. 
-A normal `Subtract` transform operates on a set that has two values.
+// | `Subtract`
+// | collection, array, or set
+// | number
+// | None
+// | Return the result of subtracting each entry in the set from its previous entry. 
+// A normal `Subtract` transform operates on a set that has two values.
 
 |`Trim`
 |string

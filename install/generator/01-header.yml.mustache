@@ -13,7 +13,8 @@ metadata:
 # OAuthProxy Tag: {{Tags.OAuthProxy}}
 #
   labels:
-    app: syndesis
+    syndesis.io/app: syndesis
+    syndesis.io/type: infrastructure
 parameters:
 # Parameters with no defaults (has to be be provided when template is applied):
 - name: ROUTE_HOSTNAME
@@ -24,6 +25,9 @@ parameters:
   description: Public OpenShift master address
   value: https://localhost:8443
   required: true
+- name: OPENSHIFT_CONSOLE_URL
+  description: The URL to the OpenShift console
+  displayName: OpenShift Console URL
 - name: OPENSHIFT_PROJECT
   description: The name of the OpenShift project Syndesis is being deployed into.
   displayName: OpenShift project to deploy into
@@ -107,7 +111,7 @@ parameters:
 - description: Maximum amount of memory the Prometheus container can use.
   displayName: Memory Limit
   name: PROMETHEUS_MEMORY_LIMIT
-  value: 255Mi
+  value: 512Mi
   required: true
 - description: Volume space available for Meta data, e.g. 512Mi, 2Gi.
   displayName: Meta Volume Capacity
@@ -124,6 +128,11 @@ parameters:
   displayName: Memory Limit
   name: SERVER_MEMORY_LIMIT
   value: 800Mi
+  required: true
+- description: Maximum number of integrations single user can create
+  displayName: Maximum number of integrations
+  name: MAX_INTEGRATIONS_PER_USER
+  value: "1"
   required: true
 - description: Key used to perform authentication of client side stored state.
   displayName: Client side state authentication key

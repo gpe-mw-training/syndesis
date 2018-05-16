@@ -15,6 +15,11 @@
  */
 package io.syndesis.server.runtime;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Objects;
+
+import io.syndesis.common.model.Kind;
 import io.syndesis.common.model.ModelData;
 import io.syndesis.common.model.integration.Integration;
 import org.junit.Test;
@@ -48,30 +53,42 @@ public class T3stSupportITCase extends BaseITCase {
         post("/api/v1/test-support/restore-db", noData, (Class<?>) null, tokenRule.validToken(), HttpStatus.NO_CONTENT);
 
         // Lets add an integration...
-        Integration integration = new Integration.Builder()
-            .id("3001")
-            .name("test")
-            .build();
+        Integration integration = new Integration.Builder().id("3001").name("test").build();
         post("/api/v1/integrations", integration, Integration.class);
 
         // Snapshot should only contain the integration entity..
         ResponseEntity<ModelData<?>[]> r2 = get("/api/v1/test-support/snapshot-db", type);
-        assertThat(r2.getBody().length).isEqualTo(1);
+        assertThat(r2.getBody()).isNotEmpty();
+
+        long r2Integrations = Arrays.stream(r2.getBody()).filter(b -> b.getKind() == Kind.Integration).count();
+        assertThat(r2Integrations).isEqualTo(1);
 
         // Reset to fresh startup state..
         get("/api/v1/test-support/reset-db", Void.class, tokenRule.validToken(), HttpStatus.NO_CONTENT);
 
         // Verify that the new state has the same number of entities as the original
         ResponseEntity<ModelData<?>[]> r3 = get("/api/v1/test-support/snapshot-db", type);
-        assertThat(r3.getBody().length).isEqualTo(r1.getBody().length);
+        assertThat(r3.getBody()).isNotEmpty();
+
+        for (ModelData<?> model : r1.getBody()) {
+            assertThat(Arrays.stream(r3.getBody()).anyMatch(b -> {
+                try {
+                    return Objects.equals(b.getData().getId().get(), model.getData().getId().get());
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+            })).isTrue();
+        }
 
         // restoring 1 item of data
         post("/api/v1/test-support/restore-db", r2.getBody(), (Class<?>) null, tokenRule.validToken(), HttpStatus.NO_CONTENT);
 
         // Snapshot should only contain the integration entity..
         ResponseEntity<ModelData<?>[]> r4 = get("/api/v1/test-support/snapshot-db", type);
-        assertThat(r4.getBody().length).isEqualTo(1);
+        assertThat(r4.getBody()).isNotEmpty();
 
+        long r4Integrations = Arrays.stream(r4.getBody()).filter(b -> b.getKind() == Kind.Integration).count();
+        assertThat(r4Integrations).isEqualTo(1);
     }
 
 }

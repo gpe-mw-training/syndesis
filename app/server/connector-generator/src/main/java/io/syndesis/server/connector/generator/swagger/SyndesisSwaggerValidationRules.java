@@ -15,14 +15,19 @@
  */
 package io.syndesis.server.connector.generator.swagger;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import io.swagger.models.ArrayModel;
 import io.swagger.models.HttpMethod;
@@ -30,6 +35,8 @@ import io.swagger.models.Model;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Response;
+import io.swagger.models.Scheme;
+import io.swagger.models.Swagger;
 import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
@@ -48,8 +55,10 @@ public final class SyndesisSwaggerValidationRules implements Function<SwaggerMod
     private final List<Function<SwaggerModelInfo, SwaggerModelInfo>> rules = new ArrayList<>();
 
     private SyndesisSwaggerValidationRules() {
-        rules.add(this::validateResponses);
-        rules.add(this::validateAuthTypes);
+        rules.add(SyndesisSwaggerValidationRules::validateResponses);
+        rules.add(SyndesisSwaggerValidationRules::validateAuthTypes);
+        rules.add(SyndesisSwaggerValidationRules::validateScheme);
+        rules.add(SyndesisSwaggerValidationRules::validateUniqueOperationIds);
     }
 
     @Override
@@ -57,10 +66,14 @@ public final class SyndesisSwaggerValidationRules implements Function<SwaggerMod
         return rules.stream().reduce(Function::compose).map(f -> f.apply(swaggerModelInfo)).orElse(swaggerModelInfo);
     }
 
+    public static SyndesisSwaggerValidationRules getInstance() {
+        return INSTANCE;
+    }
+
     /**
      * Check if all operations contains valid authentication types
      */
-    private SwaggerModelInfo validateAuthTypes(final SwaggerModelInfo swaggerModelInfo) {
+    static SwaggerModelInfo validateAuthTypes(final SwaggerModelInfo swaggerModelInfo) {
 
         if (swaggerModelInfo.getModel() == null) {
             return swaggerModelInfo;
@@ -87,7 +100,7 @@ public final class SyndesisSwaggerValidationRules implements Function<SwaggerMod
      * Check if a request/response JSON schema is present
      */
     @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.StdCyclomaticComplexity", "PMD.ModifiedCyclomaticComplexity"})
-    private SwaggerModelInfo validateResponses(final SwaggerModelInfo swaggerModelInfo) {
+    static SwaggerModelInfo validateResponses(final SwaggerModelInfo swaggerModelInfo) {
         if (swaggerModelInfo.getModel() == null) {
             return swaggerModelInfo;
         }
@@ -142,8 +155,70 @@ public final class SyndesisSwaggerValidationRules implements Function<SwaggerMod
         return withWarnings.build();
     }
 
-    public static SyndesisSwaggerValidationRules getInstance() {
-        return INSTANCE;
+    static SwaggerModelInfo validateScheme(final SwaggerModelInfo info) {
+        final Swagger swagger = info.getModel();
+        if (swagger == null) {
+            return info;
+        }
+
+        final SwaggerModelInfo.Builder withWarnings = new SwaggerModelInfo.Builder().createFrom(info);
+
+        final URI specificationUrl = specificationUriFrom(swagger);
+
+        final List<Scheme> schemes = swagger.getSchemes();
+        if (schemes == null || schemes.isEmpty()) {
+            if (specificationUrl == null) {
+                withWarnings.addWarning(new Violation.Builder()//
+                    .property("/schemes")//
+                    .error("missing-schemes")
+                    .message("Unable to determine the scheme to use: Swagger specification does not provide a `schemes` definition "
+                        + "and the Swagger specification was uploaded so the originating URL is lost.")
+                    .build());
+            }
+        } else {
+            final boolean hasHttpSchemes = schemes.stream()//
+                .filter(s -> s.toValue().startsWith("http"))//
+                .findFirst().isPresent();
+            if (!hasHttpSchemes) {
+                withWarnings.addWarning(new Violation.Builder()//
+                    .property("/schemes")//
+                    .error("missing-schemes")
+                    .message("Unable to determine the scheme to use: no supported scheme found within the Swagger specification. "
+                        + "Schemes given in the Swagger specification: "
+                        + schemes.stream().map(s -> s.toValue()).collect(Collectors.joining(", ")))
+                    .build());
+            }
+
+        }
+
+        return withWarnings.build();
+    }
+
+    static SwaggerModelInfo validateUniqueOperationIds(final SwaggerModelInfo info) {
+        final Swagger swagger = info.getModel();
+        if (swagger == null) {
+            return info;
+        }
+
+        final Map<String, Long> operationIdCounts = swagger.getPaths().values().stream()//
+            .flatMap(p -> p.getOperationMap().values().stream())//
+            .map(o -> o.getOperationId())//
+            .filter(Objects::nonNull)//
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        final Map<String, Long> nonUnique = operationIdCounts.entrySet().stream().filter(e -> e.getValue() > 1)
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+        if (nonUnique.isEmpty()) {
+            return info;
+        }
+
+        final SwaggerModelInfo.Builder withWarnings = new SwaggerModelInfo.Builder().createFrom(info);
+        withWarnings.addWarning(new Violation.Builder()//
+            .error("non-unique-operation-ids")
+            .message("Found operations with non unique operationIds: " + String.join(", ", nonUnique.keySet())).build());
+
+        return withWarnings.build();
     }
 
     private static <T> List<T> notNull(final List<T> value) {
@@ -170,6 +245,11 @@ public final class SyndesisSwaggerValidationRules implements Function<SwaggerMod
         final boolean noReference = schema.getReference() == null;
 
         return noProperties && noReference;
+    }
+
+    private static URI specificationUriFrom(final Swagger swagger) {
+        final Map<String, Object> vendorExtensions = Optional.ofNullable(swagger.getVendorExtensions()).orElse(Collections.emptyMap());
+        return (URI) vendorExtensions.get(BaseSwaggerConnectorGenerator.URL_EXTENSION);
     }
 
 }

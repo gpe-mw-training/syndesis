@@ -1,22 +1,25 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { forkJoin } from 'rxjs/observable/forkJoin';
-import { PaginationConfig } from 'patternfly-ng';
-
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { ConfigService } from '@syndesis/ui/config.service';
 import { log } from '@syndesis/ui/logging';
-import { Integration, IntegrationSupportService, Activity, Step, IntegrationDeployment } from '@syndesis/ui/platform';
+import { Activity, Integration, IntegrationDeployment, IntegrationSupportService, Step } from '@syndesis/ui/platform';
+import { PaginationConfig } from 'patternfly-ng';
+import { Subscription } from 'rxjs/Subscription';
+import { forkJoin } from 'rxjs/observable/forkJoin';
 
 @Component({
   selector: 'syndesis-integration-activity',
   templateUrl: './integration-activity.component.html',
-  styleUrls: ['./integration-activity.component.scss']
+  styleUrls: ['./integration-activity.component.scss'],
+  exportAs: 'integrationActivity'
 })
-export class IntegrationActivityComponent implements OnInit {
+export class IntegrationActivityComponent implements OnInit, OnDestroy {
+  subscription: Subscription;
   @Input() integration: Integration;
   activities: Activity[] = [];
   onRefresh: boolean;
   onError: boolean;
   showPagination: boolean;
+  openshiftConsoleURL: string;
   lastRefresh = new Date();
   paginationConfig: PaginationConfig = {
     pageSize: 15,
@@ -27,10 +30,16 @@ export class IntegrationActivityComponent implements OnInit {
 
   private allActivities: Activity[] = [];
 
-  constructor(private integrationSupportService: IntegrationSupportService) { }
+  constructor(private integrationSupportService: IntegrationSupportService, private configService: ConfigService) { }
 
   ngOnInit() {
     this.fetchActivities();
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
   }
 
   fetchStepName(step: Step): string {
@@ -38,20 +47,26 @@ export class IntegrationActivityComponent implements OnInit {
 
     if (step) {
       const { name, action } = step;
-      stepName = name || action && action.name ? action.name : stepName;
+      stepName = name || ( action && action.name ? action.name : stepName );
     }
 
     return stepName;
   }
 
   fetchActivities(): void {
+    if (!this.integration && !this.integration.id) {
+      return;
+    }
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
     this.onRefresh = true;
     this.onError = false;
 
     const activities$ = this.integrationSupportService.requestIntegrationActivity(this.integration.id);
     const integrationDeployments$ = this.integrationSupportService.getDeployments(this.integration.id);
 
-    forkJoin<[Activity[], IntegrationDeployment[]]>([activities$, integrationDeployments$]).map(results => {
+    this.subscription = forkJoin<[Activity[], IntegrationDeployment[]]>([activities$, integrationDeployments$]).map(results => {
       const activitities = results[0];
       const integrationDeployments = results[1];
 
@@ -103,6 +118,17 @@ export class IntegrationActivityComponent implements OnInit {
     this.showPagination = (this.allActivities.length > this.paginationConfig.pageSize);
     this.paginationConfig.totalItems = this.allActivities.length;
     this.paginationConfig.pageNumber = 1;
+
+    this.openshiftConsoleURL = null;
+    if (this.allActivities.length > 0) {
+      const base = this.configService.getSettings('consoleUrl');
+      const pod = this.allActivities[0].pod;
+      const project = this.configService.getSettings('project');
+      if (base && pod && project) {
+        this.openshiftConsoleURL = `${base}/project/${project}/browse/pods/${pod}?tab=logs`;
+      }
+    }
+
     this.renderActivitiesByPage();
   }
 

@@ -3,15 +3,17 @@
   metadata:
     name: syndesis-prometheus
     labels:
-      app: syndesis
-      component: syndesis-prometheus
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-prometheus
 
 - apiVersion: v1
   kind: ConfigMap
   metadata:
     labels:
-      app: syndesis
-      component: syndesis-prometheus
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-prometheus
     name: syndesis-prometheus-config
   data:
     prometheus.yml: |-
@@ -97,8 +99,9 @@
   metadata:
     name: syndesis-prometheus
     labels:
-      app: syndesis
-      component: syndesis-prometheus
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-prometheus
   spec:
     ports:
     - name: prometheus
@@ -106,8 +109,8 @@
       protocol: TCP
       targetPort: 9090
     selector:
-      app: syndesis
-      component: syndesis-prometheus
+      syndesis.io/app: syndesis
+      syndesis.io/component: syndesis-prometheus
   status:
     loadBalancer: {}
 - apiVersion: v1
@@ -115,8 +118,9 @@
   metadata:
     name: syndesis-prometheus
     labels:
-      app: syndesis
-      component: syndesis-prometheus
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-prometheus
   spec:
     accessModes:
     - ReadWriteOnce
@@ -128,13 +132,14 @@
   metadata:
     name: syndesis-prometheus
     labels:
-      app: syndesis
-      component: syndesis-prometheus
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-prometheus
   spec:
     replicas: 1
     selector:
-      app: syndesis
-      component: syndesis-prometheus
+      syndesis.io/app: syndesis
+      syndesis.io/component: syndesis-prometheus
     strategy:
       type: Recreate
       resources:
@@ -145,8 +150,9 @@
     template:
       metadata:
         labels:
-          app: syndesis
-          component: syndesis-prometheus
+          syndesis.io/app: syndesis
+          syndesis.io/type: infrastructure
+          syndesis.io/component: syndesis-prometheus
       spec:
         serviceAccountName: syndesis-prometheus
         containers:

@@ -3,21 +3,24 @@
   metadata:
     name: syndesis-server
     labels:
-      app: syndesis
-      component: syndesis-server
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-server
 - apiVersion: v1
   kind: ServiceAccount
   metadata:
     name: syndesis-integration
     labels:
-      app: syndesis
-      component: syndesis-server
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-server
 - apiVersion: v1
   kind: Service
   metadata:
     labels:
-      app: syndesis
-      component: syndesis-server
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-server
     name: syndesis-server
   spec:
     ports:
@@ -25,21 +28,21 @@
       protocol: TCP
       targetPort: 8080
     selector:
-      app: syndesis
-      component: syndesis-server
+      syndesis.io/app: syndesis
+      syndesis.io/component: syndesis-server
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
     labels:
-      app: syndesis
-      component: syndesis-server
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-server
     name: syndesis-server
   spec:
     replicas: 1
     selector:
-      app: syndesis
-      component: syndesis-server
-      deploymentconfig: syndesis-server
+      syndesis.io/app: syndesis
+      syndesis.io/component: syndesis-server
     strategy:
       resources:
         limits:
@@ -50,9 +53,9 @@
     template:
       metadata:
         labels:
-          app: syndesis
-          component: syndesis-server
-          deploymentconfig: syndesis-server
+          syndesis.io/app: syndesis
+          syndesis.io/type: infrastructure
+          syndesis.io/component: syndesis-server
       spec:
         serviceAccountName: syndesis-server
         containers:
@@ -88,6 +91,8 @@
                 key: clientStateEncryptionKey
           - name: CLIENT_STATE_TID
             value: "1"
+          - name: MAX_INTEGRATIONS_PER_USER
+            value: ${MAX_INTEGRATIONS_PER_USER}
 {{#Debug}}
           - name: JAVA_DEBUG
             value: "true"
@@ -101,6 +106,9 @@
             httpGet:
               port: 8080
               path: /api/v1/version
+              httpHeaders:
+              - name: Accept
+                value: 'text/plain'
             initialDelaySeconds: 300
             periodSeconds: 20
             failureThreshold: 5
@@ -149,9 +157,12 @@
 - apiVersion: v1
   kind: ConfigMap
   metadata:
+    annotations:
+      io.syndesis/upgrade-mode: keep
     labels:
-      app: syndesis
-      component: syndesis-server
+      syndesis.io/app: syndesis
+      syndesis.io/type: infrastructure
+      syndesis.io/component: syndesis-server
     name: syndesis-server-config
   data:
     application.yml: |-
@@ -196,7 +207,10 @@
           01_maven_central: https://repo1.maven.org/maven2
           02_redhat_ea_repository: https://maven.repository.redhat.com/earlyaccess/all
           03_jboss_ea: https://repository.jboss.org/nexus/content/groups/ea
-{{/Productized}}      openshift:
+{{/Productized}}{{#Ocp}}      controllers:
+        maxIntegrationsPerUser: 0
+        maxDeploymentsPerUser: 0
+{{/Ocp}}      openshift:
         apiBaseUrl: ${OPENSHIFT_MASTER}/oapi/v1
         namespace: ${NAMESPACE}
         imageStreamNamespace: ${IMAGE_STREAM_NAMESPACE}
@@ -206,3 +220,6 @@
         mavenOptions: "-XX:+UseG1GC -XX:+UseStringDeduplication -Xmx310m"
       dao:
         kind: jsondb
+      controllers:
+        maxIntegrationsPerUser: ${MAX_INTEGRATIONS_PER_USER}
+        maxDeploymentsPerUser: ${MAX_INTEGRATIONS_PER_USER}

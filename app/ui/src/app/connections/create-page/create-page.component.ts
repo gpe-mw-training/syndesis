@@ -16,6 +16,8 @@ const category = getCategory('Connections');
   styleUrls: ['./create-page.component.scss']
 })
 export class ConnectionsCreatePage implements OnInit, OnDestroy {
+  currentActiveStep = 1;
+
   constructor(
     public current: CurrentConnectionService,
     private route: ActivatedRoute,
@@ -81,6 +83,7 @@ export class ConnectionsCreatePage implements OnInit, OnDestroy {
   }
 
   goBack() {
+    this.currentActiveStep--;
     const page = this.getCurrentPage();
     const target = [];
     switch (page) {
@@ -109,6 +112,7 @@ export class ConnectionsCreatePage implements OnInit, OnDestroy {
    *  TODO this is terrible, the page flow should be handled in the individual steps
    */
   goForward() {
+    this.currentActiveStep++;
     const page = this.getCurrentPage();
     const target = [];
     switch (page) {
@@ -160,8 +164,9 @@ export class ConnectionsCreatePage implements OnInit, OnDestroy {
         if (
           this.current.oauthStatus &&
           this.current.oauthStatus.status === 'SUCCESS' &&
-          page === 'configure-fields'
+          page === 'review'
         ) {
+          this.currentActiveStep++;
           this.goForward();
           return;
         }

@@ -11,6 +11,7 @@ import { LoadingComponent } from './loading/loading.component';
 import { SYNDESYS_VALIDATION_DIRECTIVES } from './validation';
 import { WizardProgressBarComponent } from './wizard_progress_bar';
 
+import { I18NPipe } from './i18n.pipe';
 import { DerpPipe } from './derp.pipe';
 import { ObjectPropertyFilterPipe } from './object-property-filter.pipe';
 import { ObjectPropertySortPipe } from './object-property-sort.pipe';
@@ -31,6 +32,7 @@ import { NotificationService } from './ui-patternfly';
 import { ModalComponent, ModalService } from './modal';
 import { ConfigService } from '../config.service';
 import { NavigationService } from './navigation.service';
+import { EmptyStateCardComponent } from './empty-state-card/empty-state-card.component';
 @NgModule({
   imports: [
     CommonModule,
@@ -39,6 +41,7 @@ import { NavigationService } from './navigation.service';
     RouterModule
   ],
   declarations: [
+    I18NPipe,
     DerpPipe,
     ObjectPropertyFilterPipe,
     ObjectPropertySortPipe,
@@ -59,9 +62,11 @@ import { NavigationService } from './navigation.service';
     DeleteConfirmationModalComponent,
     InlineAlertComponent,
     ...SYNDESYS_EDITABLE_DIRECTIVES,
-    ...SYNDESYS_VALIDATION_DIRECTIVES
+    ...SYNDESYS_VALIDATION_DIRECTIVES,
+    EmptyStateCardComponent
   ],
   exports: [
+    I18NPipe,
     DerpPipe,
     ObjectPropertyFilterPipe,
     ObjectPropertySortPipe,
@@ -82,7 +87,8 @@ import { NavigationService } from './navigation.service';
     DeleteConfirmationModalComponent,
     InlineAlertComponent,
     ...SYNDESYS_EDITABLE_DIRECTIVES,
-    ...SYNDESYS_VALIDATION_DIRECTIVES
+    ...SYNDESYS_VALIDATION_DIRECTIVES,
+    EmptyStateCardComponent
   ]
 })
 export class SyndesisCommonModule {

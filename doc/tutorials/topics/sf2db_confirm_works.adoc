@@ -8,6 +8,7 @@ To confirm that the Salesforce to database integration is working:
 which means that it is running. If you used the example name, you would 
 see that 
 *Salesforce to Database Sample Integration* is *Published*.
+
 . In your Salesforce installation, create a new lead. Be
 sure to enter data
 in the fields that you mapped: *Company*, *Email*, *FirstName*,

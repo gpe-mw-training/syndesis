@@ -59,7 +59,8 @@
           "label": "No Security"
         }
       ],
-      "description": "Type of authentication used to connect to the API"
+      "description": "Type of authentication used to connect to the API",
+      "order": 1
     },
     "host": {
       "componentProperty": true,
@@ -71,9 +72,10 @@
       "javaType": "java.lang.String",
       "kind": "property",
       "label": "producer",
-      "required": false,
+      "required": true,
       "secret": false,
-      "type": "string"
+      "type": "string",
+      "order": 10
     },
     "basePath": {
       "componentProperty": true,
@@ -85,9 +87,10 @@
       "javaType": "java.lang.String",
       "kind": "property",
       "label": "producer",
-      "required": false,
+      "required": true,
       "secret": false,
-      "type": "string"
+      "type": "string",
+      "order": 11
     },
     "specification": {
       "componentProperty": true,
@@ -98,7 +101,7 @@
       "javaType": "java.lang.String",
       "kind": "property",
       "label": "producer",
-      "required": false,
+      "required": true,
       "secret": false,
       "type": "hidden",
       "tags": [

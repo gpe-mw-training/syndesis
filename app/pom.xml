@@ -37,7 +37,7 @@
     <syndesis.version>${project.version}</syndesis.version>
 
     <!-- Atlasmap version -->
-    <atlasmap.version>1.34.0</atlasmap.version>
+    <atlasmap.version>1.34.4</atlasmap.version>
     <camel-atlasmap.version>${atlasmap.version}</camel-atlasmap.version>
 
     <!-- Image names -->
@@ -63,7 +63,7 @@
     <spring.version>4.3.12.RELEASE</spring.version>
     <spring-boot.version>1.5.8.RELEASE</spring-boot.version>
 
-    <swagger.version>1.5.19-SNAPSHOT</swagger.version>
+    <swagger.version>1.5.19</swagger.version>
 
     <activemq.version>5.15.2</activemq.version>
 
@@ -86,6 +86,7 @@
 
     <!-- Plugin versions -->
     <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
+    <docker.maven.plugin.version>0.23.0</docker.maven.plugin.version>
 
     <!-- Maven versions -->
     <maven-archetype-packaging.version>2.0</maven-archetype-packaging.version>
@@ -322,16 +323,6 @@
             </executions>
           </plugin>
           <plugin>
-            <groupId>pl.project13.maven</groupId>
-            <artifactId>git-commit-id-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>default</id>
-                <phase />
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
             <artifactId>maven-enforcer-plugin</artifactId>
             <executions>
               <execution>
@@ -550,6 +541,7 @@
               <exclude>connector/**/springboot/*Common.java </exclude><!-- auto generated without headers -->
               <exclude>meta/**/run-env.sh</exclude>
               <exclude>server/syndesis-builder-image-generator/image/**</exclude><!-- auto generated without headers -->
+              <exclude>**/src/main/resources/banner.txt</exclude>
             </excludes>
           </configuration>
           <dependencies>
@@ -581,7 +573,7 @@
         <plugin>
           <artifactId>maven-pmd-plugin</artifactId>
           <configuration>
-            <analysisCache>true</analysisCache>
+            <analysisCache>false</analysisCache>
             <printFailingErrors>true</printFailingErrors>
             <rulesets>
               <ruleset>/syndesis/ruleset.xml</ruleset>
@@ -663,7 +655,21 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <configuration>
+          <rules combine.children="append">
+            <evaluateBeanshell>
+              <message>Your JVM has limited cryptography, please upgrade to 1.8.0_162 or newer or install Unlimited Strength Jurisdiction Policy Files to this JVM.</message>
+              <condition>javax.crypto.Cipher.getMaxAllowedKeyLength("AES") > 128</condition>
+            </evaluateBeanshell>
+          </rules>
+        </configuration>
+      </plugin>
+
     </plugins>
+
 
   </build>
 
@@ -1266,24 +1272,6 @@
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
     </repository>
   </distributionManagement>
-
-  <repositories>
-    <repository>
-      <!--
-           we need a SNAPSHOT version of io.swagger:* artefacts, remove
-           this when 1.5.19 is released
-           see https://github.com/swagger-api/swagger-core/issues/2316
-      -->
-      <id>oss-sonatype-snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </repository>
-  </repositories>
 
   <issueManagement>
     <system>github</system>

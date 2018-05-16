@@ -64,11 +64,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   productBuild = false;
 
-  /* tslint:disable */
-  tutorialLink = 'https://access.redhat.com/documentation/en-us/red_hat_jboss_fuse/7.0-tp/html-single/fuse_ignite_sample_integration_tutorials/';
-  userGuideLink = 'https://access.redhat.com/documentation/en-us/red_hat_jboss_fuse/7.0-tp/html-single/integrating_applications_with_ignite/';
-  /* tslint:enable */
-
   notifications: Observable<Notification[]>;
 
   /**
@@ -156,7 +151,7 @@ export class AppComponent implements OnInit, AfterViewInit {
    */
   logout() {
     this.loggedIn = false;
-    return this.userService.logout();
+    this.userService.logout();
   }
 
   /**
@@ -200,7 +195,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   handleAction($event: NotificationEvent): void {
     if ($event.action.id === 'reload') {
-      location.reload();
+      window.location.reload();
     }
   }
 
