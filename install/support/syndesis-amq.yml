@@ -85,6 +85,7 @@ objects:
       application: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}-amq
   spec:
+    paused: true
     replicas: 1
     selector:
       deploymentConfig: ${APPLICATION_NAME}-amq
