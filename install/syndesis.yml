@@ -327,6 +327,7 @@ objects:
       syndesis.io/component: syndesis-ui
     name: syndesis-ui
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -540,6 +541,7 @@ objects:
       syndesis.io/type: infrastructure
       syndesis.io/component: syndesis-db
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -663,6 +665,7 @@ objects:
       syndesis.io/component: syndesis-meta
     name: syndesis-meta
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -816,6 +819,7 @@ objects:
       syndesis.io/component: syndesis-oauthproxy
     name: syndesis-oauthproxy
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -948,6 +952,7 @@ objects:
       syndesis.io/component: syndesis-server
     name: syndesis-server
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -1200,6 +1205,7 @@ objects:
       syndesis.io/app: todo
     name: todo
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: todo
@@ -1422,6 +1428,7 @@ objects:
       syndesis.io/type: infrastructure
       syndesis.io/component: syndesis-prometheus
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
