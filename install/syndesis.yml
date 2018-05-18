@@ -25,11 +25,6 @@ parameters:
   required: true
 # Parameters with defaults:
 
-# JA Bride
-- name: MAX_INTEGRATIONS_PER_USER
-  description: MAX_INTEGRATIONS_PER_USER
-  value:  '5' 
-  required: true
 - name: MAX_DEPLOYMENTS_PER_USER
   description: MAX_DEPLOYMENTS_PER_USER
   value:  '5' 
@@ -338,6 +333,7 @@ objects:
       syndesis.io/component: syndesis-ui
     name: syndesis-ui
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -551,6 +547,7 @@ objects:
       syndesis.io/type: infrastructure
       syndesis.io/component: syndesis-db
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -674,6 +671,7 @@ objects:
       syndesis.io/component: syndesis-meta
     name: syndesis-meta
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -827,6 +825,7 @@ objects:
       syndesis.io/component: syndesis-oauthproxy
     name: syndesis-oauthproxy
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -959,6 +958,7 @@ objects:
       syndesis.io/component: syndesis-server
     name: syndesis-server
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
@@ -1225,6 +1225,7 @@ objects:
       syndesis.io/app: todo
     name: todo
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: todo
@@ -1447,6 +1448,7 @@ objects:
       syndesis.io/type: infrastructure
       syndesis.io/component: syndesis-prometheus
   spec:
+    paused: true
     replicas: 1
     selector:
       syndesis.io/app: syndesis
